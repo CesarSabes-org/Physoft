@@ -78,7 +78,7 @@ leases ni ownerId. Máximo 4.000 caracteres por pregunta; contexto de hasta 10
 intercambios completos y 28.000 caracteres. El historial completo queda guardado,
 aunque las partes antiguas puedan quedar fuera del contexto enviado al modelo.
 
-La salida es JSON completo, sin streaming; máximo 2.048 tokens de respuesta,
+La salida es JSON completo, sin streaming; máximo 4.096 tokens de respuesta,
 timeout del proveedor 45 segundos, del cliente 55. Markdown sin HTML ejecutable
 ni imágenes remotas. No se consultan expedientes ni se ejecutan herramientas.
 El límite de 10 solicitudes de creación/envío por minuto y usuario vive por proceso;
@@ -107,3 +107,13 @@ Streaming, fuentes verificadas, selección autorizada de evaluaciones, cuotas
 distribuidas y paginación del historial. Antes de empaquetar Electron, corregir
 la inclusión heredada de backend/.env en extraResources: las claves compartidas
 deben permanecer en un servidor remoto.
+
+## Ajuste de idioma y longitud
+
+El idioma se decide en cada turno según la pregunta actual o el idioma solicitado
+explícitamente. Una respuesta anterior en español no debe arrastrar una pregunta
+en inglés al español. Se priorizan respuestas completas y concisas (normalmente
+150–400 palabras), con un presupuesto de salida de 4.096 tokens. El aviso de
+truncamiento se conserva si el proveedor realmente alcanza ese límite; aumentar
+el presupuesto no garantiza respuestas de longitud ilimitada. Se retiró la etiqueta
+Powered by Claude de la interfaz.

@@ -76,7 +76,6 @@ function Assistant() {
             </aside>
             <section className={`assistant ${hasMessages ? 'assistant--conversation' : ''}`} aria-label="Physoft assistant">
                 <header className="assistant-toolbar">
-                    <span className="assistant-powered"><IoSparkles aria-hidden="true" /> Powered by Claude</span>
                     <button type="button" className="assistant-new" onClick={reset}>
                         <IoAdd aria-hidden="true" /> New conversation
                     </button>

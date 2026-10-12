@@ -31,7 +31,7 @@ export class AnthropicChatProvider implements ChatProvider {
     try {
       const response = await client.messages.create({
         model: process.env.CHAT_ANTHROPIC_MODEL || process.env.ANTHROPIC_MODEL || 'claude-sonnet-5',
-        max_tokens: 2048,
+        max_tokens: 4096,
         system,
         messages,
       }, { signal })

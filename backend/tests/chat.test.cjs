@@ -13,6 +13,8 @@ test('optional focus defaults to general; all specialties keep the same boundari
   assert.equal(new Set(prompts).size, 5)
   for (const prompt of prompts) {
     assert.match(prompt, /user's language/)
+    assert.match(prompt, /language of that latest question/)
+    assert.match(prompt, /An English question must receive an English answer/)
     assert.match(prompt, /Never invent measurements/)
     assert.match(prompt, /cannot access Physoft patient records/)
   }
@@ -59,7 +61,7 @@ test('Anthropic adapter uses server model, system and abort signal; joins text a
   assert.deepEqual(await provider.generate('system', [{ role: 'user', content: 'Hi' }], signal), { content: 'One\n\nTwo', truncated: true })
   assert.equal(captured[0].model, 'test-model')
   assert.equal(captured[0].system, 'system')
-  assert.equal(captured[0].max_tokens, 2048)
+  assert.equal(captured[0].max_tokens, 4096)
   assert.equal(captured[1].signal, signal)
   delete process.env.ANTHROPIC_API_KEY
   await assert.rejects(() => provider.generate('system', [], signal), error => error.code === 'PROVIDER_CONFIGURATION')
