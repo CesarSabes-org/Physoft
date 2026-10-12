@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
 import RootRedirect from './components/RootRedirect'
@@ -16,10 +17,13 @@ import AnalysisView from './pages/AnalysisView/AnalysisView'
 import Analytics from './pages/Analytics/Analytics'
 import Reports from './pages/Reports/Reports'
 import Protocols from './pages/Protocols/Protocols'
-import Assistant from './pages/Assistant/Assistant'
+import LoadingSpinner from './components/common/feedback/LoadingSpinner'
 import Settings from './pages/Settings/Settings'
 import Profile from './pages/Profile/Profile'
 import './styles/index.css'
+
+// Keep the assistant's Markdown renderer out of the initial application bundle.
+const Assistant = lazy(() => import('./pages/Assistant/Assistant'))
 
 function App() {
   return (
@@ -43,7 +47,7 @@ function App() {
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/protocols" element={<Protocols />} />
-          <Route path="/assistant" element={<Assistant />} />
+          <Route path="/assistant" element={<Suspense fallback={<LoadingSpinner />}><Assistant /></Suspense>} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
         </Route>

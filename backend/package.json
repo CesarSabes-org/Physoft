@@ -4,6 +4,7 @@
   "description": "Backend API de Physoft - Plataforma de análisis deportivo",
   "main": "dist/index.js",
   "scripts": {
+    "test:chat": "npm run build && node --test tests/chat.test.cjs",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "prisma generate && tsc",
     "vercel-build": "prisma generate && tsc",

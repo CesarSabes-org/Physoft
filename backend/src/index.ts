@@ -14,6 +14,7 @@ import athleteRoutes from './presentation/routes/athleteRoutes'
 import analysisRoutes from './presentation/routes/analysisRoutes'
 import claudeRoutes from './presentation/routes/claudeRoutes'
 import authRoutes from './presentation/routes/authRoutes'
+import chatRoutes from './presentation/routes/chatRoutes'
 // TEMPORARILY DISABLED - Authentication paused until production infrastructure is available.
 // `authenticate` is unused in this file while the three route mounts below go unprotected.
 // The middleware itself is untouched at ./middleware/authenticate.ts — re-import it here to re-enable.
@@ -53,6 +54,9 @@ app.get('/api/health', (_req: Request, res: Response) => {
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }))
+
+// Chat owns its smaller JSON limit and authentication; it does not read patient data.
+app.use('/api/chat', chatRoutes)
 
 // JSON parser
 app.use(express.json({ limit: '10mb' }))
