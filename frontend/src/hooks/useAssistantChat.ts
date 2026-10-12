@@ -19,6 +19,7 @@ export function useAssistantChat(userId?: string) {
   const draft = useRef<{ id: string; mode: ChatMode } | null>(null)
   const active = useRef<AbortController | null>(null)
   const identity = useRef(userId)
+  const loadedIdentity = useRef(userId)
   identity.current = userId
 
   const adopt = useCallback((value: Conversation) => {
@@ -37,7 +38,8 @@ export function useAssistantChat(userId?: string) {
   useEffect(() => { setConversations([]); void refreshList() }, [refreshList])
 
   useEffect(() => {
-    if (activeId && current.current?.id === activeId) return
+    if (loadedIdentity.current === userId && activeId && current.current?.id === activeId) return
+    loadedIdentity.current = userId
     active.current?.abort()
     active.current = null
     current.current = null
@@ -115,8 +117,8 @@ export function useAssistantChat(userId?: string) {
 
   const chooseMode = useCallback((selected: ChatMode) => {
     if (modeChosen || current.current || active.current) return
-    void run(null, selected)
-  }, [modeChosen, run])
+    setMode(selected)
+  }, [modeChosen])
   const send = useCallback((text: string): boolean => {
     if (!text.trim() || text.length > CHAT_MESSAGE_LIMIT || active.current || isLoading || waiting || pending || !userId || (activeId && !current.current)) return false
     void run({ requestId: crypto.randomUUID(), message: text.trim() }, mode)
@@ -124,9 +126,20 @@ export function useAssistantChat(userId?: string) {
   }, [activeId, mode, isLoading, waiting, pending, userId, run])
   const failedTurn = Boolean(pending && !isSending) || lastTurn?.status === 'failed' || lastTurn?.status === 'cancelled'
   const retry = useCallback(() => {
-    const request = pending ?? (lastTurn ? { requestId: lastTurn.requestId, message: lastTurn.prompt } : null)
-    void run(request, mode)
-  }, [pending, lastTurn, mode, run])
+    const request = pending ?? (lastTurn && ['failed', 'cancelled'].includes(lastTurn.status) ? { requestId: lastTurn.requestId, message: lastTurn.prompt } : null)
+    if (request) void run(request, mode)
+    else if (activeId) {
+      // A failed read must never create a different conversation or generate a reply.
+      const controller = new AbortController()
+      active.current?.abort()
+      active.current = controller
+      setIsLoading(true)
+      assistantApi.get(activeId, controller.signal).then(value => {
+        if (!controller.signal.aborted) { adopt(value); setError(null) }
+      }).catch(failure => { if (!controller.signal.aborted) setError(getChatErrorMessage(failure)) })
+        .finally(() => { if (active.current === controller) { active.current = null; setIsLoading(false) } })
+    }
+  }, [pending, lastTurn, mode, run, activeId, adopt])
   const reset = useCallback(() => {
     active.current?.abort()
     active.current = null
@@ -138,6 +151,7 @@ export function useAssistantChat(userId?: string) {
     setError(null)
     setPending(null)
     setIsSending(false)
+    setIsLoading(false)
     setParams({}, { replace: true })
   }, [setParams])
   const open = useCallback((id: string) => { setParams({ chat: id }) }, [setParams])

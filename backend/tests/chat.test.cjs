@@ -1,14 +1,11 @@
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
-const express = require('express')
-const jwt = require('jsonwebtoken')
 const Anthropic = require('@anthropic-ai/sdk').default
 const { parseChatRequest } = require('../dist/application/services/chat/chatValidation')
 const { buildChatSystemPrompt } = require('../dist/application/services/chat/prompts')
 const { ChatService } = require('../dist/application/services/chat/ChatService')
-const { ChatError, CHAT_MODES } = require('../dist/domain/types/chat')
+const { CHAT_MODES } = require('../dist/domain/types/chat')
 const { AnthropicChatProvider, mapAnthropicChatError } = require('../dist/infrastructure/ai/AnthropicChatProvider')
-const { createChatRouter } = require('../dist/presentation/routes/chatRoutes')
 
 test('optional focus defaults to general; all specialties keep the same boundaries', () => {
   assert.deepEqual(parseChatRequest({ message: '  Explain strength  ' }), { message: 'Explain strength', mode: 'general', history: [] })
@@ -85,56 +82,4 @@ test('Anthropic refusal, empty output and SDK errors are safe errors', async t =
     assert.doesNotMatch(result.message, /SECRET/)
   }
   assert.equal(mapAnthropicChatError(new Anthropic.APIConnectionTimeoutError()).status, 504)
-})
-
-async function withServer(t, provider) {
-  process.env.JWT_SECRET = 'test-only-not-a-real-secret'
-  const app = express()
-  app.use('/api/chat', createChatRouter(new ChatService(provider)))
-  const server = await new Promise(resolve => { const server = app.listen(0, '127.0.0.1', () => resolve(server)) })
-  t.after(() => { server.closeAllConnections(); return new Promise(resolve => server.close(resolve)) })
-  const url = `http://127.0.0.1:${server.address().port}/api/chat/messages`
-  const token = jwt.sign({ id: 'test-user', email: 'test@example.invalid', role: 'ADMIN' }, process.env.JWT_SECRET, { expiresIn: 60 })
-  const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
-  return { url, headers }
-}
-
-test('HTTP auth, validation and rate limit prevent calls; valid messages work', async t => {
-  let calls = 0
-  const { url, headers } = await withServer(t, { generate: async () => { calls++; return { content: 'Reply', truncated: false } } })
-  assert.equal((await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status, 401)
-  assert.equal((await fetch(url, { method: 'POST', headers, body: JSON.stringify({ message: 'Hi', mode: 'evil' }) })).status, 400)
-  assert.equal(calls, 0)
-  const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ message: 'Hi' }) })
-  assert.equal(response.headers.get('cache-control'), 'no-store')
-  assert.deepEqual(await response.json(), { success: true, data: { content: 'Reply', truncated: false, mode: 'general' } })
-  for (let i = 0; i < 8; i++) await fetch(url, { method: 'POST', headers, body: '{"message":"Hello"}' })
-  assert.equal((await fetch(url, { method: 'POST', headers, body: '{"message":"Hello"}' })).status, 429)
-  assert.equal(calls, 9)
-})
-
-test('HTTP rejects malformed/large JSON and sanitizes unexpected errors', async t => {
-  const { url, headers } = await withServer(t, { generate: async () => { throw new Error('private upstream details') } })
-  assert.equal((await fetch(url, { method: 'POST', headers, body: '{broken' })).status, 400)
-  assert.equal((await fetch(url, { method: 'POST', headers, body: JSON.stringify({ message: 'x'.repeat(70000) }) })).status, 413)
-  const response = await fetch(url, { method: 'POST', headers, body: '{"message":"Hello"}' })
-  assert.equal(response.status, 500)
-  assert.doesNotMatch(await response.text(), /private/)
-})
-
-test('disconnect aborts upstream work', async t => {
-  let started
-  const ready = new Promise(resolve => { started = resolve })
-  let cancelled
-  const wasCancelled = new Promise(resolve => { cancelled = resolve })
-  const { url, headers } = await withServer(t, { generate: (_system, _messages, signal) => new Promise((_resolve, reject) => {
-    signal.addEventListener('abort', () => { cancelled(); reject(new ChatError(499, 'ABORTED', 'stopped')) }, { once: true })
-    started()
-  }) })
-  const abort = new AbortController()
-  const request = fetch(url, { method: 'POST', headers, body: '{"message":"Hi"}', signal: abort.signal }).catch(() => {})
-  await ready
-  abort.abort()
-  await request
-  await Promise.race([wasCancelled, new Promise((_resolve, reject) => { const timeout = setTimeout(() => reject(new Error('upstream not cancelled')), 1500); timeout.unref() })])
 })

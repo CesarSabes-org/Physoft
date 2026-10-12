@@ -13,7 +13,8 @@ Actualización de alcance (2026-10-12, solicitud del usuario): la primera entreg
 usa **Anthropic**, cuatro focos opcionales y un prompt general predeterminado.
 Consultar `docs/CHATBOT_SETUP.md` para el estado implementado. Esta decisión
 sustituye la propuesta anterior de OpenAI/Gemini para esta feature. Priorizar
-conversación y UI; la integración con expedientes y persistencia queda para después.
+conversación y UI. La persistencia por usuario y el login ya forman parte de la entrega;
+la integración con expedientes queda para después.
 
 Antes de implementar el asistente, leer `docs/CHATBOT_IMPLEMENTATION_PLAN.md`.
 El documento distingue hallazgos actuales, decisiones propuestas y trabajo pendiente.
@@ -43,7 +44,7 @@ Mantener revisión profesional para contenido individual de rehabilitación.
 
 - Las claves viven en el servidor. No leerlas en respuestas, volcarlas en logs,
   ponerlas en variables `VITE_*` ni distribuirlas en Electron.
-- El código actual tiene autenticación desactivada: no publicar el chat ni acceso
+- Mantener la autenticación activada: no publicar el chat ni acceso
   a expedientes sin autenticación y autorización comprobadas en backend.
 - La identidad proviene de `req.user`; nunca confiar en `userId`, roles, historial
   o datos clínicos completos enviados por el navegador como fuente autorizada.

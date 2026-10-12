@@ -1,6 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { IoSparkles, IoAnalyticsOutline, IoBulbOutline, IoLayersOutline, IoTrendingUpOutline, IoSend, IoAdd, IoStop, IoRefreshOutline, IoArrowDown, IoTrashOutline } from 'react-icons/io5'
+import { IoSparkles, IoAnalyticsOutline, IoBulbOutline, IoLayersOutline, IoTrendingUpOutline, IoSend, IoAdd, IoStop, IoRefreshOutline, IoArrowDown, IoTrashOutline, IoCheckmark } from 'react-icons/io5'
 import PageTemplate from '../../components/templates/PageTemplate'
 import ChatMessage from '../../components/assistant/ChatMessage'
 import { useAssistantChat } from '../../hooks/useAssistantChat'
@@ -89,19 +89,21 @@ function Assistant() {
                 </div>}
                 {!chat.modeChosen && !chat.isLoading && <><div className="assistant-focus-heading">
                     <span>Choose a focus for this conversation</span>
-                    <span>Optional · chosen once per chat</span>
+                    <span>Optional · fixed when you send</span>
                 </div>
                 <div className="assistant-suggestions" role="group" aria-label="Optional conversation focus">
                     {CAPABILITIES.map(capability => (
                         <button type="button" key={capability.mode}
                             className={`assistant-suggestion ${chat.mode === capability.mode ? 'is-selected' : ''}`}
+                            aria-pressed={chat.mode === capability.mode}
                             disabled={chat.isSending || !isAuthenticated}
-                            onClick={() => { chat.chooseMode(capability.mode); composer.current?.focus() }}>
+                            onClick={() => { chat.chooseMode(chat.mode === capability.mode ? 'general' : capability.mode); composer.current?.focus({ preventScroll: true }) }}>
                             <span className="assistant-suggestion-icon" aria-hidden="true">{capability.icon}</span>
                             <span className="assistant-suggestion-body">
                                 <span className="assistant-suggestion-title">{CHAT_MODE_LABELS[capability.mode]}</span>
                                 <span className="assistant-suggestion-desc">{capability.description}</span>
                             </span>
+                            <span className="assistant-selection" aria-hidden="true">{chat.mode === capability.mode && <IoCheckmark />}</span>
                         </button>
                     ))}
                 </div></>}
