@@ -3,20 +3,28 @@ import rateLimit from 'express-rate-limit'
 import { authenticate } from '../../middleware/authenticate'
 import { ChatService } from '../../application/services/chat/ChatService'
 import { AnthropicChatProvider } from '../../infrastructure/ai/AnthropicChatProvider'
-import { createChatController } from '../controllers/chatController'
+import { ConversationService } from '../../application/services/chat/ConversationService'
+import { ChatRepository } from '../../infrastructure/repositories/ChatRepository'
+import { conversationControllers } from '../controllers/conversationController'
 
-export function createChatRouter(service = new ChatService(new AnthropicChatProvider())) {
+export function createChatRouter(service = new ChatService(new AnthropicChatProvider()), repository = new ChatRepository()) {
   const router = Router()
   router.use(authenticate)
-  router.use(rateLimit({
+  const generationLimiter = rateLimit({
     windowMs: 60 * 1000,
     limit: 10,
     keyGenerator: req => req.user!.id,
     standardHeaders: true,
     legacyHeaders: false,
     message: { success: false, code: 'RATE_LIMITED', error: 'Too many messages. Please wait a minute before trying again.' },
-  }))
-  router.post('/messages', express.json({ limit: '64kb' }), createChatController(service))
+  })
+  const actions = conversationControllers(new ConversationService(repository, service))
+  router.use(express.json({ limit: '16kb' }))
+  router.get('/conversations', actions.list)
+  router.get('/conversations/:id', actions.get)
+  router.post('/conversations', generationLimiter, actions.create)
+  router.delete('/conversations/:id', actions.remove)
+  router.post('/conversations/:id/messages', generationLimiter, actions.send)
   const bodyError: ErrorRequestHandler = (error, _req, res, next) => {
     if (error.type === 'entity.too.large' || error.type === 'entity.parse.failed') {
       res.status(error.type === 'entity.too.large' ? 413 : 400).json({

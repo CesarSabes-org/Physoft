@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { IoLogInOutline, IoAlertCircle } from 'react-icons/io5'
 import PageTemplate from '../../components/templates/PageTemplate'
 import { ButtonLoadingContent } from '../../components/common/feedback/ButtonSpinner'
@@ -10,6 +10,9 @@ import './Login.css'
 
 function Login() {
     const { isAuthenticated, login } = useAuth()
+    const location = useLocation()
+    const from: unknown = location.state?.from
+    const destination = typeof from === 'string' && from.startsWith('/') && !from.startsWith('//') && !from.startsWith('/login') ? from : ROUTES.DASHBOARD
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState<string | null>(null)
@@ -17,7 +20,7 @@ function Login() {
 
     // Already signed in — nothing to do here.
     if (isAuthenticated) {
-        return <Navigate to={ROUTES.DASHBOARD} replace />
+        return <Navigate to={destination} replace />
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
