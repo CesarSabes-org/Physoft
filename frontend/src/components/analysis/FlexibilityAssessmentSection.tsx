@@ -1,21 +1,22 @@
 import type { FlexibilityExerciseId, FlexibilityRating } from '@/services/api'
 import type { FlexibilityAssessmentFormState } from '@/hooks/useFlexibilityAssessmentForm'
 import { getEvidencePreviewSrc } from '@/hooks/useFlexibilityAssessmentForm'
+import { computeFlexibilityScore, FLEXIBILITY_POINTS } from '@/utils/clinicalScoring'
 import FlexibilityExerciseRow, { FlexibilityExercise } from './FlexibilityExerciseRow'
 import './FlexibilityAssessmentSection.css'
 
-import ej1Mal from '@/assets/Flexibility_Assessment/physoft_ej1_mal.png'
-import ej1Normal from '@/assets/Flexibility_Assessment/physoft_ej1_normal.png'
-import ej1Bien from '@/assets/Flexibility_Assessment/physoft_ej1_bien.png'
-import ej2Mal from '@/assets/Flexibility_Assessment/physoft_ej2_mal.png'
-import ej2Normal from '@/assets/Flexibility_Assessment/physoft_ej2_normal.png'
-import ej2Bien from '@/assets/Flexibility_Assessment/physoft_ej2_bien.png'
-import ej3Mal from '@/assets/Flexibility_Assessment/physoft_ej3_mal.png'
-import ej3Normal from '@/assets/Flexibility_Assessment/physoft_ej3_normal.png'
-import ej3Bien from '@/assets/Flexibility_Assessment/physoft_ej3_bien.png'
-import ej4Mal from '@/assets/Flexibility_Assessment/physoft_ej4_mal.png'
-import ej4Normal from '@/assets/Flexibility_Assessment/physoft_ej4_normal.png'
-import ej4Bien from '@/assets/Flexibility_Assessment/physoft_ej4_bien.png'
+import ej1Mal from '@/assets/Flexibility_Assessment/physoft_ej1_mal.webp'
+import ej1Normal from '@/assets/Flexibility_Assessment/physoft_ej1_normal.webp'
+import ej1Bien from '@/assets/Flexibility_Assessment/physoft_ej1_bien.webp'
+import ej2Mal from '@/assets/Flexibility_Assessment/physoft_ej2_mal.webp'
+import ej2Normal from '@/assets/Flexibility_Assessment/physoft_ej2_normal.webp'
+import ej2Bien from '@/assets/Flexibility_Assessment/physoft_ej2_bien.webp'
+import ej3Mal from '@/assets/Flexibility_Assessment/physoft_ej3_mal.webp'
+import ej3Normal from '@/assets/Flexibility_Assessment/physoft_ej3_normal.webp'
+import ej3Bien from '@/assets/Flexibility_Assessment/physoft_ej3_bien.webp'
+import ej4Mal from '@/assets/Flexibility_Assessment/physoft_ej4_mal.webp'
+import ej4Normal from '@/assets/Flexibility_Assessment/physoft_ej4_normal.webp'
+import ej4Bien from '@/assets/Flexibility_Assessment/physoft_ej4_bien.webp'
 
 export const FLEXIBILITY_EXERCISES: FlexibilityExercise[] = [
     {
@@ -61,6 +62,10 @@ function FlexibilityAssessmentSection({
     evidenceBusy,
     evidenceErrors
 }: FlexibilityAssessmentSectionProps) {
+    const flexScore = computeFlexibilityScore(
+        Object.values(items).map((item) => ({ exerciseId: item.exerciseId, rating: item.rating, evidenceUrl: null }))
+    )
+
     return (
         <div className="flexibility-assessment-section">
             {FLEXIBILITY_EXERCISES.map((exercise, index) => {
@@ -81,6 +86,23 @@ function FlexibilityAssessmentSection({
                     />
                 )
             })}
+
+            <div className="flexibility-score-summary" aria-live="polite">
+                <div>
+                    <span className="flexibility-score-label">Flexibility Score</span>
+                    <span className="flexibility-score-formula">
+                        (P1 + P2 + P3 + P4) / 4 · Poor {FLEXIBILITY_POINTS.LOW} · Average {FLEXIBILITY_POINTS.MEDIUM} · Excellent {FLEXIBILITY_POINTS.HIGH} · Risk {FLEXIBILITY_POINTS.RISK}*
+                    </span>
+                </div>
+                <span className="flexibility-score-value">
+                    {flexScore.score !== null ? `${flexScore.score} / 100` : `Incomplete — ${flexScore.ratedCount}/4 tests rated`}
+                </span>
+            </div>
+            {flexScore.riskExercises.length > 0 && (
+                <p className="flexibility-score-warning">
+                    * Risk adds no extra points: it keeps the maximum range score and raises a separate warning to review joint control.
+                </p>
+            )}
         </div>
     )
 }

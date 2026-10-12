@@ -1,14 +1,11 @@
 import { IoGolfOutline, IoImageOutline } from 'react-icons/io5'
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import {
     SPORT_IMAGES,
     SPORT_TITLES,
     SPORT_PLACEHOLDERS,
     DEFAULT_SPORT_PLACEHOLDER,
-    inertialForcePhasesMock,
-    sportInterpretationMock,
-    sportMetricsMock
-} from './mockSportAnalysis'
+    INERTIAL_FORCE_PHASES
+} from './sportAssets'
 import './charts/ChartCard.css'
 import './SportReportSection.css'
 
@@ -16,25 +13,17 @@ interface SportReportSectionProps {
     sport?: string | null
 }
 
-function InertialForceTooltip({ active, payload, label }: any) {
-    if (!active || !payload || payload.length === 0) return null
-    return (
-        <div className="chart-card-tooltip">
-            <div style={{ fontWeight: 700 }}>{label}</div>
-            <div style={{ color: payload[0].color }}>{payload[0].value}</div>
-        </div>
-    )
-}
-
 /**
- * Sport Report — dynamic title/image driven by SPORT_TITLES/SPORT_IMAGES/
- * SPORT_PLACEHOLDERS (mockSportAnalysis.ts). Not Golf-specific: adding a
- * new sport is adding one entry to each map, no component changes.
+ * Sport Report — keeps the section's space and design, but Inertial Force
+ * stays "Not evaluated" until acquisition and a calculation method are
+ * available (a wrist IMU alone does not give whole-body force; it has to be
+ * converted to newtons using the measured velocity).
  */
 function SportReportSection({ sport }: SportReportSectionProps) {
     const title = sport ? SPORT_TITLES[sport] || `INERTIAL FORCE IN ${sport.toUpperCase()}` : 'INERTIAL FORCE ANALYSIS'
     const image = sport ? SPORT_IMAGES[sport] : undefined
     const placeholderText = sport ? SPORT_PLACEHOLDERS[sport] || DEFAULT_SPORT_PLACEHOLDER : DEFAULT_SPORT_PLACEHOLDER
+    const phases = sport ? INERTIAL_FORCE_PHASES[sport] : undefined
 
     return (
         <section className="analysis-section">
@@ -45,7 +34,7 @@ function SportReportSection({ sport }: SportReportSectionProps) {
             <div className="sport-report-body">
                 <div className="sport-report-visual">
                     {image ? (
-                        <img src={image} alt={sport || 'Sport'} className="sport-report-image" />
+                        <img src={image} alt={sport ? `${sport} illustration` : 'Sport illustration'} className="sport-report-image" />
                     ) : (
                         <div className="sport-report-placeholder">
                             <IoImageOutline />
@@ -55,17 +44,20 @@ function SportReportSection({ sport }: SportReportSectionProps) {
 
                     <div className="chart-card sport-report-chart-card">
                         <div className="chart-card-header">
-                            <h3>Inertial Force by Phase</h3>
+                            <div className="chart-card-title-row">
+                                <h3>Inertial Force by Phase</h3>
+                                <span className="report-status-tag report-status-not_evaluated">Not evaluated</span>
+                            </div>
                         </div>
-                        <ResponsiveContainer width="100%" height={220}>
-                            <LineChart data={inertialForcePhasesMock} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                                <CartesianGrid vertical={false} stroke="var(--border-color)" strokeOpacity={0.5} />
-                                <XAxis dataKey="phase" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickLine={false} axisLine={false} />
-                                <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickLine={false} axisLine={false} width={28} />
-                                <Tooltip content={<InertialForceTooltip />} cursor={{ stroke: 'var(--border-color)' }} />
-                                <Line type="monotone" dataKey="value" name="Inertial Force" stroke="#14b8a6" strokeWidth={2.5} dot={{ r: 4, fill: '#14b8a6' }} />
-                            </LineChart>
-                        </ResponsiveContainer>
+                        <div className="sport-report-phases">
+                            {(phases ?? ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4']).map((phase) => (
+                                <div key={phase} className="sport-report-phase">
+                                    <span className="sport-report-phase-bar" />
+                                    <span>{phase}</span>
+                                    <strong>—</strong>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
@@ -74,11 +66,10 @@ function SportReportSection({ sport }: SportReportSectionProps) {
                         <div className="chart-card-header">
                             <h3>Interpretation</h3>
                         </div>
-                        <ul className="sport-report-bullets">
-                            {sportInterpretationMock.map((point, idx) => (
-                                <li key={idx}>{point}</li>
-                            ))}
-                        </ul>
+                        <p className="chart-card-note" style={{ marginTop: 0 }}>
+                            Not evaluated. Results will be shown once inertial force acquisition and a validated calculation method are available.
+                            A wrist IMU alone does not provide whole-body force: it has to be converted to newtons using the measured velocity.
+                        </p>
                     </div>
 
                     <div className="chart-card">
@@ -86,10 +77,10 @@ function SportReportSection({ sport }: SportReportSectionProps) {
                             <h3>Metrics</h3>
                         </div>
                         <div className="sport-report-metrics">
-                            {sportMetricsMock.map((metric) => (
-                                <div key={metric.label} className="sport-report-metric">
-                                    <span className="sport-report-metric-label">{metric.label}</span>
-                                    <span className="sport-report-metric-value">{metric.value}</span>
+                            {['Peak Force', 'Average Force', 'Control Index', 'Variability'].map((label) => (
+                                <div key={label} className="sport-report-metric">
+                                    <span className="sport-report-metric-label">{label}</span>
+                                    <span className="sport-report-metric-value sport-report-metric-empty">Not evaluated</span>
                                 </div>
                             ))}
                         </div>

@@ -37,7 +37,11 @@
   font-weight: 600;
 }
 
-.rom-pct {
-  color: var(--color-primary, #14b8a6) !important;
-  font-weight: 700;
+.rom-muted {
+  color: var(--color-text-muted, #737373);
+}
+
+.rom-excessive {
+  color: #c084fc;
+  font-weight: 600;
 }

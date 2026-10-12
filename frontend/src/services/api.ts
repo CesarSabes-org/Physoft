@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { getToken, clearToken } from '../utils/tokenStorage'
+import type { ClinicalResults, ClinicalExtractionResult } from '../types/clinicalResults.types'
 
 // Base Axios configuration
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
@@ -267,8 +268,9 @@ export interface AIAnalysisResult {
 export const FLEXIBILITY_EXERCISE_IDS = ['forwardFlexion', 'shoulderMobility', 'butterfly', 'deepSquat'] as const
 export type FlexibilityExerciseId = typeof FLEXIBILITY_EXERCISE_IDS[number]
 
-// Internal storage values. The UI labels these Poor/Average/Excellent.
-export type FlexibilityRating = 'LOW' | 'MEDIUM' | 'HIGH'
+// Internal storage values. The UI labels these Poor/Average/Excellent/Risk.
+// RISK = excessive flexibility: scores like HIGH but raises a separate warning.
+export type FlexibilityRating = 'LOW' | 'MEDIUM' | 'HIGH' | 'RISK'
 
 export interface FlexibilityAssessmentResult {
   exerciseId: FlexibilityExerciseId
@@ -298,6 +300,7 @@ export interface Analysis {
   coachRecommendations?: string | null
   aiAnalysisResults?: AIAnalysisResult[] | null  // Textual Analysis AI results (native JSON column)
   flexibilityAssessment?: FlexibilityAssessmentResult[] | null  // Flexibility Assessment ratings + evidence (native JSON column)
+  clinicalResults?: ClinicalResults | null  // Measured/observed results for report boxes 2-9 (native JSON column)
   createdAt: string
   updatedAt: string
   athlete?: {
@@ -306,6 +309,11 @@ export interface Analysis {
     name: string
     sport: string
     photo?: string | null
+    gender?: string
+    birthDate?: string | null
+    height?: number
+    weight?: number
+    bodyType?: string
   }
 }
 
@@ -333,6 +341,8 @@ export interface CreateAnalysisDTO {
   // locally for each exercise (keyed by exerciseId).
   flexibilityAssessment?: { exerciseId: FlexibilityExerciseId; rating: FlexibilityRating | null; evidenceUrl?: string | null }[]
   flexibilityEvidenceFiles?: Partial<Record<FlexibilityExerciseId, File>>
+  // null clears the stored results (update only)
+  clinicalResults?: ClinicalResults | null
 }
 
 export const analysisAPI = {
@@ -422,6 +432,11 @@ export const analysisAPI = {
         const file = analysis.flexibilityEvidenceFiles[exerciseId]
         if (file) formData.append(`flexibilityEvidence_${exerciseId}`, file)
       }
+    }
+
+    // Measured/observed results (native Json column on the backend)
+    if (analysis.clinicalResults) {
+      formData.append('clinicalResults', JSON.stringify(analysis.clinicalResults))
     }
 
     const response = await apiClient.post<{ success: boolean; data: Analysis; message: string }>(
@@ -597,6 +612,32 @@ export const claudeAPI = {
       return response.data
     } catch (error: any) {
       const message = error.response?.data?.error || error.message || 'Error generating AI analysis'
+      return { success: false, error: message }
+    }
+  },
+
+  // Suggest values for the measured results from device reports (BTS, InBody, EMG).
+  // Nothing is saved — the evaluator reviews the suggestions in the form.
+  extractClinicalResults: async (files: File[]): Promise<{ success: boolean; data?: ClinicalExtractionResult; error?: string }> => {
+    const formData = new FormData()
+    files.forEach((file) => formData.append('files', file))
+
+    try {
+      const response = await apiClient.post<{ success: boolean; data: ClinicalExtractionResult }>(
+        '/claude/extract-clinical-results',
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          // Reading multi-page device reports can take longer than the default 30s
+          timeout: 120000
+        }
+      )
+      return response.data
+    } catch (error: any) {
+      if (error.response?.status === 413) {
+        return { success: false, error: 'The files are too large to upload. Try fewer files or smaller images.' }
+      }
+      const message = error.response?.data?.error || error.message || 'Error reading the reports'
       return { success: false, error: message }
     }
   }

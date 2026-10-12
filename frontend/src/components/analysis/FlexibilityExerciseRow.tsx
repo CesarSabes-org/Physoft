@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { IoCameraOutline, IoClose } from 'react-icons/io5'
+import { IoCameraOutline, IoClose, IoWarningOutline } from 'react-icons/io5'
 import type { FlexibilityExerciseId, FlexibilityRating } from '@/services/api'
 import './FlexibilityExerciseRow.css'
 
@@ -10,8 +10,9 @@ export interface FlexibilityExercise {
     images: Record<'poor' | 'average' | 'excellent', string>
 }
 
-// Internally the rating is stored/sent as LOW/MEDIUM/HIGH; these labels and
-// CSS modifiers are UI-only.
+// Internally the rating is stored/sent as LOW/MEDIUM/HIGH/RISK; these labels
+// and CSS modifiers are UI-only. RISK has no illustration, so it renders as a
+// separate full-width option below the three image cards.
 const RATING_OPTIONS: { value: FlexibilityRating; label: string; modifier: 'poor' | 'average' | 'excellent' }[] = [
     { value: 'LOW', label: 'Poor', modifier: 'poor' },
     { value: 'MEDIUM', label: 'Average', modifier: 'average' },
@@ -98,6 +99,17 @@ function FlexibilityExerciseRow({
                         </span>
                     </button>
                 ))}
+
+                <button
+                    type="button"
+                    className={`flexibility-option-risk ${rating === 'RISK' ? 'selected' : ''}`}
+                    onClick={() => onRatingSelect('RISK')}
+                    aria-pressed={rating === 'RISK'}
+                    title="Excessive flexibility: keeps the maximum score but raises a separate warning to review joint control. It does not automatically mean a higher injury risk."
+                >
+                    <IoWarningOutline />
+                    <span>Risk — excessive flexibility, review joint control</span>
+                </button>
             </div>
 
             <div className="flexibility-exercise-evidence">

@@ -1,29 +1,36 @@
 import { IoBarChartOutline } from 'react-icons/io5'
-import CapacityRadarCard from './charts/CapacityRadarCard'
-import CohortComparisonCard from './charts/CohortComparisonCard'
-import ProgressOverTimeCard from './charts/ProgressOverTimeCard'
-import MuscularBalanceCard from './charts/MuscularBalanceCard'
-import LoadDistributionCard from './charts/LoadDistributionCard'
+import FlexibilityCard from './charts/FlexibilityCard'
+import { BalanceCard, ExplosivePerformanceCard, FallRiskCard, FatigueCard, GaitSpeedCard } from './charts/MeasuredResultCards'
 import RangeOfMotionCard from './charts/RangeOfMotionCard'
+import MuscularBalanceCard from './charts/MuscularBalanceCard'
 import BodyCompositionCard from './charts/BodyCompositionCard'
+import CompensationMapCard from './charts/CompensationMapCard'
+import ProgressOverTimeCard from './charts/ProgressOverTimeCard'
+import { buildProgressRows, type ReportData } from './reportData'
 import './MainChartsSection.css'
 
-/** "Main Charts" — the 7 visual cards (radar, bar, line, bars, image, table, donut). */
-function MainChartsSection() {
+/** Results in detail — one card per report box plus the complementary blocks. */
+function MainChartsSection({ data }: { data: ReportData }) {
+    const { results } = data
+
     return (
         <section className="analysis-section">
             <h2>
-                <IoBarChartOutline /> Main Charts
+                <IoBarChartOutline /> Results in Detail
             </h2>
 
             <div className="main-charts-grid">
-                <CapacityRadarCard />
-                <CohortComparisonCard />
-                <ProgressOverTimeCard />
-                <MuscularBalanceCard />
-                <LoadDistributionCard />
-                <BodyCompositionCard />
-                <RangeOfMotionCard />
+                <FlexibilityCard flexibility={data.flexibility} />
+                <ExplosivePerformanceCard results={results} />
+                <FatigueCard results={results} />
+                <BalanceCard results={results} />
+                <GaitSpeedCard results={results} />
+                <FallRiskCard results={results} />
+                <RangeOfMotionCard results={results} />
+                <MuscularBalanceCard results={results} />
+                <BodyCompositionCard results={results} gender={data.gender} />
+                <CompensationMapCard regions={data.regions} />
+                <ProgressOverTimeCard rows={buildProgressRows(data)} />
             </div>
         </section>
     )

@@ -7,7 +7,11 @@ import { ButtonLoadingContent } from '@/components/common/feedback/ButtonSpinner
 import MiniChatPanel from '@/components/analysis/MiniChatPanel'
 import { analysisAPI, FLEXIBILITY_EXERCISE_IDS, type AIAnalysisResult, type FlexibilityAssessmentResult, type FlexibilityExerciseId } from '@/services/api'
 import { useAnalysisStore } from '@/store/analysisStore'
-import { useAIAnalysisResults, useFlexibilityAssessmentForm } from '@/hooks'
+import { useAIAnalysisResults, useClinicalResultsForm, useFlexibilityAssessmentForm } from '@/hooks'
+import ClinicalResultsSection from '@/components/analysis/clinicalResults/ClinicalResultsSection'
+import AssessmentSportSelect from '@/components/analysis/AssessmentSportSelect'
+import type { ClinicalResults } from '@/types/clinicalResults.types'
+import { CLINICAL_SECTIONS, sectionHasData } from '@/utils/clinicalScoring'
 import { WeakPointsList } from '@/components/analysis/WeakPointsList'
 import { PhysicalCapacitiesForm } from '@/components/analysis/PhysicalCapacitiesForm'
 import { AnalysisFieldsForm } from '@/components/analysis/AnalysisFieldsForm'
@@ -53,6 +57,11 @@ function EditAnalysis() {
     const flexibilityForm = useFlexibilityAssessmentForm(flexibilityInitial)
     const [flexibilityEvidenceBusy, setFlexibilityEvidenceBusy] = useState<Partial<Record<FlexibilityExerciseId, boolean>>>({})
     const [flexibilityEvidenceErrors, setFlexibilityEvidenceErrors] = useState<Partial<Record<FlexibilityExerciseId, string | null>>>({})
+
+    // Measured/observed results (report boxes 2-9), saved with the main Save Changes submit
+    const [clinicalInitial, setClinicalInitial] = useState<ClinicalResults | null>(null)
+    const clinicalForm = useClinicalResultsForm(clinicalInitial)
+    const [athleteGender, setAthleteGender] = useState<string | null>(null)
 
     const [formData, setFormData] = useState({
         fechaEvaluacion: '',
@@ -109,6 +118,8 @@ function EditAnalysis() {
 
             setAiAnalysisResults(analysis.aiAnalysisResults || [])
             setFlexibilityInitial(analysis.flexibilityAssessment || null)
+            setClinicalInitial(analysis.clinicalResults || null)
+            setAthleteGender(analysis.athlete?.gender ?? null)
 
             setFormData({
                 fechaEvaluacion: analysis.evaluationDate ? new Date(analysis.evaluationDate).toISOString().split('T')[0] : '',
@@ -279,6 +290,13 @@ function EditAnalysis() {
                 }))
             }
 
+            // Measured results: full replace. Older assessments without results
+            // only get the column written once something is actually entered.
+            const hasClinicalData = CLINICAL_SECTIONS.some(({ key }) => sectionHasData(clinicalForm.results, key))
+            if (clinicalInitial || hasClinicalData || clinicalForm.results.snapshot.sport) {
+                updateData.clinicalResults = clinicalForm.results
+            }
+
             const response = await analysisAPI.update(parseInt(id), updateData)
 
             // Update store
@@ -337,6 +355,12 @@ function EditAnalysis() {
                             required
                         />
                     </div>
+
+                    <AssessmentSportSelect
+                        value={clinicalForm.results.snapshot.sport ?? ''}
+                        onChange={(sport) => clinicalForm.setField('snapshot.sport', sport || null)}
+                        disabled={saving}
+                    />
                 </div>
 
                 {/* SECTION 2 - Flexibility Assessment */}
@@ -359,10 +383,23 @@ function EditAnalysis() {
                     />
                 </div>
 
-                {/* SECCIÓN 3 - Análisis Textual */}
+                {/* SECTION 3 - Measured results (report boxes 2-9) */}
                 <div className="form-section">
                     <h3 className="section-title">
                         <span className="section-number">3</span>
+                        Measured Results
+                    </h3>
+                    <p className="section-description">
+                        Empty boxes are reported as “Not evaluated”, never as zero.
+                    </p>
+
+                    <ClinicalResultsSection form={clinicalForm} gender={athleteGender} disabled={saving} />
+                </div>
+
+                {/* SECCIÓN 4 - Análisis Textual */}
+                <div className="form-section">
+                    <h3 className="section-title">
+                        <span className="section-number">4</span>
                         Textual Analysis
                     </h3>
 
@@ -392,10 +429,10 @@ function EditAnalysis() {
                     )}
                 </div>
 
-                {/* SECCIÓN 4 - Conclusiones y Plan */}
+                {/* SECCIÓN 5 - Conclusiones y Plan */}
                 <div className="form-section">
                     <h3 className="section-title">
-                        <span className="section-number">4</span>
+                        <span className="section-number">5</span>
                         Conclusions and Plan
                     </h3>
 

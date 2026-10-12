@@ -3,3 +3,43 @@
   flex-direction: column;
   gap: 1.5rem;
 }
+
+.flexibility-score-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid rgba(20, 184, 166, 0.35);
+  border-radius: 12px;
+  background: rgba(20, 184, 166, 0.06);
+}
+
+.flexibility-score-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.flexibility-score-label {
+  font-weight: 700;
+  color: var(--color-text-primary, #ffffff);
+}
+
+.flexibility-score-formula {
+  font-size: 0.78rem;
+  color: var(--color-text-muted, #737373);
+}
+
+.flexibility-score-value {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-primary, #14b8a6);
+}
+
+.flexibility-score-warning {
+  margin: -0.75rem 0 0;
+  font-size: 0.8rem;
+  color: #d8b4fe;
+}

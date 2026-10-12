@@ -97,3 +97,39 @@
     grid-template-columns: 1fr;
   }
 }
+
+.sport-report-metric-empty {
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--color-text-muted, #737373);
+}
+
+.sport-report-phases {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+  min-height: 140px;
+}
+
+.sport-report-phase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #737373);
+  text-align: center;
+}
+
+.sport-report-phase-bar {
+  width: 100%;
+  height: 90px;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+}
+
+.sport-report-phase strong {
+  color: var(--color-text-muted, #737373);
+}

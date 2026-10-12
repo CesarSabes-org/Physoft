@@ -1,65 +1,55 @@
-import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
-import { bodyCompositionMock } from '../mockCharts'
-import './ChartCard.css'
-import './BodyCompositionCard.css'
+import type { ClinicalResults } from '@/types/clinicalResults.types'
+import { RANGE_POSITION_LABELS, bodyFatReference, classifyBmi, classifyRange, effectiveStatus, formatValue } from '@/utils/clinicalScoring'
+import ReportCard, { ToneText } from './ReportCard'
 
-const SEGMENT_COLORS = ['#f59e0b', '#14b8a6', '#3b82f6']
-
-function BodyCompositionCard() {
-    const { bodyFatPercent, muscleMassPercent, waterPercent, basalMetabolism, classification } = bodyCompositionMock
-
-    const chartData = [
-        { name: 'Body Fat', value: bodyFatPercent },
-        { name: 'Muscle Mass', value: muscleMassPercent },
-        { name: 'Water', value: waterPercent }
-    ]
+/**
+ * Box 9 — each InBody parameter on its own. Body fat against the InBody
+ * reference by sex, BMI by WHO category, skeletal muscle reported without
+ * a rating (no appropriate reference).
+ */
+function BodyCompositionCard({ results, gender }: { results: ClinicalResults; gender: string | null }) {
+    const s = results.composition
+    const fatRef = bodyFatReference(gender)
+    const fat = fatRef ? classifyRange(s.bodyFatPct, fatRef.min, fatRef.max) : null
+    const bmiCategory = classifyBmi(s.bmi)
 
     return (
-        <div className="chart-card">
-            <div className="chart-card-header">
-                <h3>Body Composition (FREE)</h3>
-            </div>
-
-            <div className="body-composition-body">
-                <div className="body-composition-chart">
-                    <ResponsiveContainer width="100%" height={150}>
-                        <PieChart>
-                            <Pie
-                                data={chartData}
-                                dataKey="value"
-                                nameKey="name"
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={44}
-                                outerRadius={68}
-                                paddingAngle={3}
-                                cornerRadius={4}
-                                stroke="var(--surface-color)"
-                                strokeWidth={2}
-                            >
-                                {chartData.map((entry, idx) => (
-                                    <Cell key={entry.name} fill={SEGMENT_COLORS[idx]} />
-                                ))}
-                            </Pie>
-                        </PieChart>
-                    </ResponsiveContainer>
-                    <div className="body-composition-center">
-                        <span className="body-composition-center-value">{classification}</span>
-                    </div>
+        <ReportCard title="9 · Body Composition – InBody" subtitle="Each parameter on its own" source={s.source} status={effectiveStatus(results, 'composition')}>
+            <dl className="report-kv">
+                <div>
+                    <dt>Body fat</dt>
+                    <dd>
+                        {formatValue(s.bodyFatPct, '%')}
+                        {s.bodyFatPct !== null && (
+                            <small>
+                                {fat && fatRef
+                                    ? <><ToneText tone={fat === 'WITHIN' ? 'good' : 'bad'}>{RANGE_POSITION_LABELS[fat]}</ToneText> · InBody {gender?.toLowerCase()} {fatRef.min}–{fatRef.max}%</>
+                                    : 'Pending reference (sex-specific)'}
+                            </small>
+                        )}
+                    </dd>
                 </div>
-
-                <ul className="body-composition-legend">
-                    <li><span className="body-composition-dot" style={{ background: SEGMENT_COLORS[0] }} /> Body Fat <strong>{bodyFatPercent}%</strong></li>
-                    <li><span className="body-composition-dot" style={{ background: SEGMENT_COLORS[1] }} /> Muscle Mass <strong>{muscleMassPercent}%</strong></li>
-                    <li><span className="body-composition-dot" style={{ background: SEGMENT_COLORS[2] }} /> Water <strong>{waterPercent}%</strong></li>
-                </ul>
-            </div>
-
-            <div className="chart-card-footer">
-                <span className="chart-card-footer-label">Basal Metabolism</span>
-                <span className="chart-card-footer-value">{basalMetabolism}</span>
-            </div>
-        </div>
+                <div>
+                    <dt>BMI</dt>
+                    <dd>
+                        {formatValue(s.bmi, 'kg/m²')}
+                        {bmiCategory && <small><ToneText tone={bmiCategory === 'Normal weight' ? 'good' : 'bad'}>{bmiCategory}</ToneText> · WHO adult category</small>}
+                    </dd>
+                </div>
+                <div>
+                    <dt>Skeletal muscle (estimated)</dt>
+                    <dd>
+                        {formatValue(s.skeletalMuscleKg, 'kg')}
+                        {s.skeletalMuscleKg !== null && <small>Not rated without an appropriate reference</small>}
+                    </dd>
+                </div>
+                <div>
+                    <dt>Weight</dt>
+                    <dd>{formatValue(s.weightKg, 'kg')}</dd>
+                </div>
+            </dl>
+            {s.notes && <p className="chart-card-note">{s.notes}</p>}
+        </ReportCard>
     )
 }
 

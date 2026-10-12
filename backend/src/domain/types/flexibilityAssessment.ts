@@ -3,14 +3,15 @@
 // ============================================
 // The 4 standardized flexibility tests shown in the New/Edit Assessment
 // form's "Flexibility Assessment" section. Each exercise stores a
-// LOW/MEDIUM/HIGH rating (the UI shows Poor/Average/Excellent) and an
-// optional evidence photo, persisted as a JSON array on Analysis.flexibilityAssessment.
+// LOW/MEDIUM/HIGH/RISK rating (the UI shows Poor/Average/Excellent/Risk) and
+// an optional evidence photo, persisted as a JSON array on Analysis.flexibilityAssessment.
+// RISK = excessive flexibility: scores like HIGH but raises a separate warning.
 // ============================================
 
 export const FLEXIBILITY_EXERCISE_IDS = ['forwardFlexion', 'shoulderMobility', 'butterfly', 'deepSquat'] as const
 export type FlexibilityExerciseId = typeof FLEXIBILITY_EXERCISE_IDS[number]
 
-export const FLEXIBILITY_RATINGS = ['LOW', 'MEDIUM', 'HIGH'] as const
+export const FLEXIBILITY_RATINGS = ['LOW', 'MEDIUM', 'HIGH', 'RISK'] as const
 export type FlexibilityRating = typeof FLEXIBILITY_RATINGS[number]
 
 export interface FlexibilityAssessmentItem {

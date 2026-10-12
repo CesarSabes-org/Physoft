@@ -30,3 +30,16 @@
   font-size: 0.88rem;
   line-height: 1.6;
 }
+
+.detailed-analysis-empty {
+  margin: 0;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--color-text-muted, #737373);
+}
+
+.detailed-analysis-footnote {
+  margin: 0.9rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #737373);
+}

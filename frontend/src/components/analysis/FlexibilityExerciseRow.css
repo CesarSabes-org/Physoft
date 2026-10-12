@@ -152,6 +152,41 @@
   border-color: currentColor;
 }
 
+/* Risk (excessive flexibility) — full-width option under the image cards */
+.flexibility-option-risk {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border: 2px dashed rgba(168, 85, 247, 0.45);
+  border-radius: 10px;
+  background: rgba(168, 85, 247, 0.06);
+  color: #d8b4fe;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.flexibility-option-risk svg {
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.flexibility-option-risk:hover {
+  border-color: #a855f7;
+}
+
+.flexibility-option-risk.selected {
+  border-style: solid;
+  border-color: #a855f7;
+  background: rgba(168, 85, 247, 0.15);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+}
+
 /* Right: Upload Evidence */
 .flexibility-exercise-evidence {
   display: flex;

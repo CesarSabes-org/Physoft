@@ -1,14 +1,22 @@
+.muscular-balance-overall {
+  margin: 0 0 0.75rem;
+  color: var(--color-text-secondary, #a3a3a3);
+  font-size: 0.88rem;
+}
+
+.muscular-balance-overall strong {
+  color: var(--color-text-primary, #ffffff);
+}
+
 .muscular-balance-list {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-  flex: 1;
-  justify-content: center;
+  gap: 0.8rem;
 }
 
 .muscular-balance-row {
   display: grid;
-  grid-template-columns: 110px 1fr 42px;
+  grid-template-columns: minmax(90px, 130px) 1fr minmax(90px, auto);
   align-items: center;
   gap: 0.75rem;
 }
@@ -18,23 +26,53 @@
   color: var(--color-text-secondary, #a3a3a3);
 }
 
-.muscular-balance-bar {
+.muscular-balance-split {
+  display: flex;
   height: 10px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
   overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
 }
 
-.muscular-balance-bar-fill {
-  height: 100%;
-  border-radius: 6px;
-  background: linear-gradient(90deg, var(--color-primary, #14b8a6), #0d9488);
-  transition: width 0.5s ease;
+.muscular-balance-split-right,
+.muscular-balance-dot-right {
+  background: #14b8a6;
+}
+
+.muscular-balance-split-left,
+.muscular-balance-dot-left {
+  background: #3b82f6;
+}
+
+.muscular-balance-novalues {
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #737373);
 }
 
 .muscular-balance-value {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--color-text-primary, #ffffff);
   text-align: right;
+}
+
+.muscular-balance-legend {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #737373);
+}
+
+.muscular-balance-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.muscular-balance-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
 }

@@ -1,14 +1,9 @@
 .main-charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
   gap: 1.25rem;
 }
 
-/* Range of Motion sits alone on its row — span it full-width and center a
-   wider card so its table gets room to breathe instead of scrolling. */
-.main-charts-grid .chart-card-rom {
-  grid-column: 1 / -1;
-  width: 100%;
-  max-width: 620px;
-  margin: 0 auto;
+.main-charts-grid .chart-card {
+  min-height: 0;
 }

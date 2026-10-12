@@ -95,6 +95,8 @@ model Analysis {
   // [{ exerciseId, rating: "LOW"|"MEDIUM"|"HIGH"|null, evidenceUrl, evidencePublicId }]
   flexibilityAssessment   Json?
 
+  clinicalResults         Json?    // Measured/observed results for report boxes 2-9 (see domain/types/clinicalResults.ts)
+
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
   athlete                 Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)

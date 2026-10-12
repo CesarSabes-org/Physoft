@@ -9,7 +9,11 @@ import { useAthleteStore } from '@/store/athleteStore'
 import DateInputMMDDYYYY from '@/components/common/forms/DateInputMMDDYYYY'
 import TextualAnalysisSection from '@/components/analysis/TextualAnalysisSection'
 import FlexibilityAssessmentSection from '@/components/analysis/FlexibilityAssessmentSection'
-import { useFlexibilityAssessmentForm } from '@/hooks'
+import ClinicalResultsSection from '@/components/analysis/clinicalResults/ClinicalResultsSection'
+import AssessmentSportSelect from '@/components/analysis/AssessmentSportSelect'
+import { defaultAssessmentSport } from '@/components/analysisReport/sportAssets'
+import { useClinicalResultsForm, useFlexibilityAssessmentForm } from '@/hooks'
+import type { DominantSide } from '@/types/clinicalResults.types'
 import { FLEXIBILITY_EXERCISE_IDS } from '@/services/api'
 import { BODY_TYPES, BODY_TYPE_LABELS, VALIDATION } from '@/constants'
 import { calculateAge } from '@/utils/date.utils'
@@ -33,6 +37,9 @@ function NewAnalysis() {
   // Flexibility Assessment ratings + evidence photos (uploaded on submit, together with the rest of the analysis)
   const flexibilityForm = useFlexibilityAssessmentForm()
 
+  // Measured/observed results (report boxes 2-9), manual or AI-suggested then reviewed
+  const clinicalForm = useClinicalResultsForm()
+
   const [formData, setFormData] = useState({
     athleteId: '',
     fechaEvaluacion: '',
@@ -41,6 +48,10 @@ function NewAnalysis() {
     weight: '',
     height: '',
     somatotype: '',
+    // Declared dominant side (information only: it does not imply more strength or uneven weight bearing)
+    dominantSide: '' as DominantSide | '',
+    // Sport evaluated in this assessment — selects the report illustration
+    assessmentSport: '',
     recomendaciones: ''
   })
 
@@ -87,7 +98,8 @@ function NewAnalysis() {
       // Prefill the editable parameters from the patient's current profile.
       weight: athlete.weight != null ? String(athlete.weight) : '',
       height: athlete.height != null ? String(athlete.height) : '',
-      somatotype: athlete.bodyType || ''
+      somatotype: athlete.bodyType || '',
+      assessmentSport: defaultAssessmentSport(athlete.sport)
     }))
     setSearchQuery(`${athlete.accessCode} - ${athlete.name}`)
     setShowAthleteDropdown(false)
@@ -148,6 +160,18 @@ function NewAnalysis() {
       // Recommendations for coach
       if (formData.recomendaciones) submitData.coachRecommendations = formData.recomendaciones
 
+      // Measured results + the patient's parameters as recorded at this evaluation
+      submitData.clinicalResults = {
+        ...clinicalForm.results,
+        snapshot: {
+          weightLbs: formData.weight ? Number(formData.weight) : null,
+          heightFt: formData.height ? Number(formData.height) : null,
+          somatotype: formData.somatotype || null,
+          dominantSide: formData.dominantSide || null,
+          sport: formData.assessmentSport || null
+        }
+      }
+
       // Flexibility Assessment: only send exercises the user actually touched
       const flexibilityItems = FLEXIBILITY_EXERCISE_IDS
         .map((exerciseId) => flexibilityForm.items[exerciseId])
@@ -184,6 +208,7 @@ function NewAnalysis() {
 
       setMensaje({ tipo: 'success', texto: '✅ Analysis saved successfully' })
 
+      // guardando stays true until the redirect, so the form can't be submitted twice
       setTimeout(() => {
         navigate(`/analysis-view/${response.data.id}`)
       }, 1500)
@@ -203,7 +228,6 @@ function NewAnalysis() {
         tipo: 'error',
         texto: errorMessage
       })
-    } finally {
       setGuardando(false)
     }
   }
@@ -349,6 +373,30 @@ function NewAnalysis() {
                   ))}
                 </select>
               </div>
+
+              <div className="form-group">
+                <label htmlFor="dominantSide">Dominant side (declared)</label>
+                <select
+                  id="dominantSide"
+                  name="dominantSide"
+                  className="form-select"
+                  value={formData.dominantSide}
+                  onChange={handleChange}
+                >
+                  <option value="">Not declared</option>
+                  <option value="RIGHT">Right</option>
+                  <option value="LEFT">Left</option>
+                  <option value="AMBIDEXTROUS">Ambidextrous</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <AssessmentSportSelect
+                value={formData.assessmentSport}
+                onChange={(sport) => setFormData(prev => ({ ...prev, assessmentSport: sport }))}
+                disabled={guardando}
+              />
             </div>
           </div>
 
@@ -370,10 +418,24 @@ function NewAnalysis() {
             />
           </div>
 
-          {/* SECTION 3 - Textual Analysis with AI */}
+          {/* SECTION 3 - Measured results (report boxes 2-9) */}
           <div className="form-section">
             <h3 className="section-title">
               <span className="section-number">3</span>
+              Measured Results
+            </h3>
+            <p className="section-description">
+              Enter the results of each test, or auto-fill them from the device reports and review them.
+              Leave a box empty when the test was not performed — it will be reported as “Not evaluated”, never as zero.
+            </p>
+
+            <ClinicalResultsSection form={clinicalForm} gender={selectedAthlete?.gender} disabled={guardando} />
+          </div>
+
+          {/* SECTION 4 - Textual Analysis with AI */}
+          <div className="form-section">
+            <h3 className="section-title">
+              <span className="section-number">4</span>
               Textual Analysis
             </h3>
             <p className="section-description">
@@ -394,15 +456,16 @@ function NewAnalysis() {
             />
           </div>
 
-          {/* SECTION 4 - Conclusions and Plan */}
+          {/* SECTION 5 - Conclusions and Plan */}
           <div className="form-section">
             <h3 className="section-title">
-              <span className="section-number">4</span>
+              <span className="section-number">5</span>
               Conclusions and plan
             </h3>
 
             <div className="subsection">
               <h4>Recommendations for Coach</h4>
+              <p className="field-hint">Link each recommendation to a documented finding. They appear in the report as reviewed by the professional.</p>
               <textarea
                 name="recomendaciones"
                 value={formData.recomendaciones}

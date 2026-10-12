@@ -45,3 +45,21 @@
     grid-template-columns: 1fr;
   }
 }
+
+.analysis-section-note {
+  margin: -0.75rem 0 1.25rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.analysis-ai-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .analysis-section {
+    padding: 1.25rem;
+  }
+}

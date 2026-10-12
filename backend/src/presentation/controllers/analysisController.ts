@@ -10,6 +10,7 @@ import { prisma } from '../../infrastructure/prismaClient'
 import { UploadService } from '../../application/services/uploadService'
 import { ComparisonService } from '../../application/services/ComparisonService'
 import { isFlexibilityExerciseId, normalizeFlexibilityAssessment, FlexibilityAssessmentItem } from '../../domain/types/flexibilityAssessment'
+import { normalizeClinicalResults, ClinicalResults, ClinicalResultsValidationError } from '../../domain/types/clinicalResults'
 
 /**
  * Prisma's Json input types require an index signature that a plain named
@@ -17,7 +18,7 @@ import { isFlexibilityExerciseId, normalizeFlexibilityAssessment, FlexibilityAss
  * not `any`) is the standard escape hatch for writing a strongly-typed
  * domain shape into a `Json` column.
  */
-function toInputJson(items: FlexibilityAssessmentItem[]): Prisma.InputJsonValue {
+function toInputJson(items: FlexibilityAssessmentItem[] | ClinicalResults): Prisma.InputJsonValue {
   return items as unknown as Prisma.InputJsonValue
 }
 
@@ -183,7 +184,8 @@ export class AnalysisController {
         cohortClassification, // AI-generated cohort classification
         coachRecommendations,
         aiAnalysisResults, // Textual Analysis AI results (array), JSON string over multipart
-        flexibilityAssessment // Flexibility Assessment ratings (array), JSON string over multipart
+        flexibilityAssessment, // Flexibility Assessment ratings (array), JSON string over multipart
+        clinicalResults // Measured/observed results for report boxes 2-9, JSON string over multipart
       } = req.body
 
       // Validate required fields
@@ -192,6 +194,20 @@ export class AnalysisController {
           success: false,
           error: 'athleteId and evaluationDate are required',
         })
+      }
+
+      // Validated before any file is uploaded, so a bad payload never leaves
+      // orphaned images behind.
+      let parsedClinicalResults: ClinicalResults | undefined = undefined
+      if (clinicalResults !== undefined && clinicalResults !== null && clinicalResults !== '') {
+        try {
+          parsedClinicalResults = normalizeClinicalResults(clinicalResults)
+        } catch (validationError) {
+          if (validationError instanceof ClinicalResultsValidationError) {
+            return res.status(400).json({ success: false, error: validationError.message })
+          }
+          throw validationError
+        }
       }
 
       // Verify athlete exists
@@ -317,6 +333,7 @@ export class AnalysisController {
           coachRecommendations: coachRecommendations || null,
           aiAnalysisResults: parsedAiAnalysisResults,
           flexibilityAssessment: parsedFlexibilityAssessment ? toInputJson(parsedFlexibilityAssessment) : undefined,
+          clinicalResults: parsedClinicalResults ? toInputJson(parsedClinicalResults) : undefined,
         },
         include: {
           athlete: {
@@ -369,8 +386,25 @@ export class AnalysisController {
         cohortClassification,
         coachRecommendations,
         aiAnalysisResults,
-        flexibilityAssessment
+        flexibilityAssessment,
+        clinicalResults
       } = req.body
+
+      // clinicalResults uses the same full-replace contract as
+      // flexibilityAssessment; explicit null clears it.
+      let clinicalResultsUpdate: Prisma.InputJsonValue | typeof Prisma.DbNull | undefined = undefined
+      if (clinicalResults === null) {
+        clinicalResultsUpdate = Prisma.DbNull
+      } else if (clinicalResults !== undefined) {
+        try {
+          clinicalResultsUpdate = toInputJson(normalizeClinicalResults(clinicalResults))
+        } catch (validationError) {
+          if (validationError instanceof ClinicalResultsValidationError) {
+            return res.status(400).json({ success: false, error: validationError.message })
+          }
+          throw validationError
+        }
+      }
 
       // Check if analysis exists
       const existing = await prisma.analysis.findUnique({
@@ -437,6 +471,7 @@ export class AnalysisController {
               return normalized.length > 0 ? toInputJson(normalized) : Prisma.DbNull
             })()
           }),
+          ...(clinicalResultsUpdate !== undefined && { clinicalResults: clinicalResultsUpdate }),
         },
         include: {
           athlete: {

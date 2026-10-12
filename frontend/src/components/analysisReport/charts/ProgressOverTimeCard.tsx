@@ -1,41 +1,49 @@
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { progressOverTimeMock } from '../mockCharts'
-import './ChartCard.css'
+import { formatDate } from '@/utils/date.utils'
+import type { ProgressRow } from '../reportData'
+import ReportCard from './ReportCard'
+import './RangeOfMotionCard.css'
 
-function ProgressTooltip({ active, payload, label }: any) {
-    if (!active || !payload || payload.length === 0) return null
+/**
+ * Comparable earlier visits only: same variable and unit, same source when
+ * both visits record it, and at least a week apart (tests from the same
+ * week don't form a progress curve).
+ */
+function ProgressOverTimeCard({ rows }: { rows: ProgressRow[] }) {
     return (
-        <div className="chart-card-tooltip">
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>{label}</div>
-            {payload.map((entry: any) => (
-                <div key={entry.dataKey} style={{ color: entry.color }}>
-                    {entry.name}: {entry.value}
+        <ReportCard title="Progress Over Time" subtitle="Comparable previous visits (same variable, unit and protocol)" wide>
+            {rows.length === 0 ? (
+                <p className="chart-card-empty">Initial evaluation — follow-up pending</p>
+            ) : (
+                <div className="rom-table-wrap">
+                    <table className="rom-table">
+                        <thead>
+                            <tr>
+                                <th>Variable</th>
+                                <th>Previous</th>
+                                <th>This evaluation</th>
+                                <th>Change vs last</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {rows.map((row) => {
+                                const previous = row.points.slice(0, -1)
+                                const current = row.points[row.points.length - 1]
+                                return (
+                                    <tr key={row.label}>
+                                        <td>{row.label}</td>
+                                        <td>
+                                            {previous.map((p) => `${p.value} (${formatDate(p.date)})`).join(' → ')}
+                                        </td>
+                                        <td>{current.value} {row.unit}</td>
+                                        <td>{row.change === null ? '—' : `${row.change > 0 ? '+' : ''}${row.change} ${row.unit}`}</td>
+                                    </tr>
+                                )
+                            })}
+                        </tbody>
+                    </table>
                 </div>
-            ))}
-        </div>
-    )
-}
-
-function ProgressOverTimeCard() {
-    return (
-        <div className="chart-card">
-            <div className="chart-card-header">
-                <h3>Progress Over Time</h3>
-                <p>Monthly progression (last 6 months)</p>
-            </div>
-            <ResponsiveContainer width="100%" height={260}>
-                <LineChart data={progressOverTimeMock} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                    <CartesianGrid vertical={false} stroke="var(--border-color)" strokeOpacity={0.5} />
-                    <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickLine={false} axisLine={false} />
-                    <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickLine={false} axisLine={false} width={28} />
-                    <Tooltip content={<ProgressTooltip />} cursor={{ stroke: 'var(--border-color)' }} />
-                    <Legend wrapperStyle={{ fontSize: 12, color: 'var(--text-secondary)' }} />
-                    <Line type="monotone" dataKey="strength" name="Strength" stroke="#14b8a6" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="power" name="Power" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="flexibility" name="Flexibility" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                </LineChart>
-            </ResponsiveContainer>
-        </div>
+            )}
+        </ReportCard>
     )
 }
 
