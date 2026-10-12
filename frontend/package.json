@@ -4,6 +4,9 @@
   "description": "Frontend de Physoft - Plataforma de análisis deportivo",
   "type": "module",
   "scripts": {
+    "test:chat": "vitest run --config vitest.config.ts",
+    "test:chat:e2e": "playwright test --config playwright.chat.config.ts",
+    "lint:chat": "eslint --no-eslintrc --config .eslintrc.chat.cjs src/pages/Assistant/Assistant.tsx src/components/assistant src/hooks/useAssistantChat.ts src/services/assistantApi.ts src/types/chat.types.ts --ext ts,tsx --max-warnings 0",
     "dev": "vite",
     "build": "tsc && vite build",
     "vercel-build": "npm run build",
@@ -22,12 +25,17 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.5.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^6.26.2",
     "recharts": "^2.12.7",
+    "remark-gfm": "^4.0.1",
     "wait-on": "^9.0.1",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
     "@types/better-sqlite3": "^7.6.13",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
@@ -38,8 +46,10 @@
     "eslint": "^8.57.1",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.12",
+    "jsdom": "^25.0.1",
     "prisma": "^6.18.0",
     "typescript": "^5.6.2",
-    "vite": "^5.4.8"
+    "vite": "^6.4.4",
+    "vitest": "^4.1.11"
   }
 }

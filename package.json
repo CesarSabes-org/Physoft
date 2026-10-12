@@ -11,7 +11,8 @@
         "build:all": "npm run build:frontend && npm run build:backend",
         "dist": "electron-builder",
         "dist:win": "electron-builder --win",
-        "postinstall": "cd frontend && npm install && cd ../backend && npm install && cd .."
+        "postinstall": "cd frontend && npm install && cd ../backend && npm install && cd ..",
+        "dev:web": "node frontend/node_modules/concurrently/dist/bin/concurrently.js --kill-others -n Backend,Frontend \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\""
     },
     "keywords": [
         "electron",

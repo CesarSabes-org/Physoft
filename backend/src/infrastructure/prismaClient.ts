@@ -15,7 +15,8 @@ declare global {
 
 const prismaClientSingleton = () => {
   return new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    // Query logging can disclose persisted conversations and password hashes.
+    log: [],
     datasources: {
       db: {
         url: process.env.DATABASE_URL,

@@ -84,31 +84,4 @@ export class AuthService {
     return { success: true }
   }
 
-  /**
-   * Creates the initial ADMIN user from ADMIN_EMAIL/ADMIN_PASSWORD if no
-   * user with that email exists yet. Never updates an existing user, so a
-   * password changed later via the app always survives future deploys and
-   * restarts. Safe to call on every cold start: relies solely on the
-   * database's unique constraint on email to avoid duplicate-creation
-   * races, rather than a check-then-create pattern. Never throws.
-   */
-  static async bootstrapAdminUser(): Promise<void> {
-    const email = (process.env.ADMIN_EMAIL || 'admin@physoft.com').trim().toLowerCase()
-    const password = process.env.ADMIN_PASSWORD || 'physoft2026'
-
-    try {
-      const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS)
-      await prisma.user.create({
-        data: { email, passwordHash, role: UserRole.ADMIN }
-      })
-      console.log(`✓ Admin user bootstrapped: ${email}`)
-    } catch (error: any) {
-      if (error?.code === 'P2002') {
-        // Unique constraint on email — admin user already exists, nothing to do.
-        console.log('✓ Admin user already exists, skipping bootstrap')
-        return
-      }
-      console.error('✗ Admin user bootstrap failed:', error)
-    }
-  }
 }

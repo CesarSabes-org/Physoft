@@ -14,11 +14,8 @@ import athleteRoutes from './presentation/routes/athleteRoutes'
 import analysisRoutes from './presentation/routes/analysisRoutes'
 import claudeRoutes from './presentation/routes/claudeRoutes'
 import authRoutes from './presentation/routes/authRoutes'
-// TEMPORARILY DISABLED - Authentication paused until production infrastructure is available.
-// `authenticate` is unused in this file while the three route mounts below go unprotected.
-// The middleware itself is untouched at ./middleware/authenticate.ts — re-import it here to re-enable.
-// import { authenticate } from './middleware/authenticate'
-import { AuthService } from './application/services/authService'
+import chatRoutes from './presentation/routes/chatRoutes'
+import { authenticate } from './middleware/authenticate'
 
 // Load environment variables
 dotenv.config()
@@ -54,6 +51,9 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }))
 
+// Chat owns its smaller JSON limit and authentication; it does not read patient data.
+app.use('/api/chat', chatRoutes)
+
 // JSON parser
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))
@@ -73,31 +73,20 @@ app.get('/api/ping', (_req: Request, res: Response) => {
   res.json({ message: 'pong', timestamp: new Date().toISOString() })
 })
 
-// Ensure the initial admin user exists before any route handles a request.
-// Runs once per cold start; on warm invocations the promise is already
-// resolved so this is a no-op microtask. Kept after /api/health and
-// /api/ping so uptime checks don't depend on it succeeding.
-const adminBootstrapPromise = AuthService.bootstrapAdminUser()
-app.use((_req: Request, _res: Response, next: NextFunction) => {
-  adminBootstrapPromise.then(() => next())
-})
+// Admin provisioning runs through seed:admin, never implicitly on serverless requests.
 
 // Auth routes (public)
 app.use('/api/auth', authRoutes)
 
-// TEMPORARILY DISABLED - Authentication paused until production infrastructure is available.
-// `authenticate` removed from the three mounts below so the API behaves exactly as it did
-// before this feature. To re-enable, restore `authenticate,` as the second argument to each
-// app.use() call (see git history / imperative-sauteeing-sedgewick plan for the original code).
 
 // Athlete routes
-app.use('/api/athletes', athleteRoutes)
+app.use('/api/athletes', authenticate, athleteRoutes)
 
 // Analysis routes
-app.use('/api/analyses', analysisRoutes)
+app.use('/api/analyses', authenticate, analysisRoutes)
 
 // Claude (AI Textual Analysis) routes
-app.use('/api/claude', claudeRoutes)
+app.use('/api/claude', authenticate, claudeRoutes)
 
 // 404 route
 app.use((_req: Request, res: Response) => {

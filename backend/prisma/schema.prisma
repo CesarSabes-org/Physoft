@@ -18,8 +18,45 @@ model User {
   role         UserRole @default(ADMIN)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  chats        ChatConversation[]
 
   @@map("users")
+}
+
+model ChatConversation {
+  id           String   @id @default(uuid())
+  userId       String
+  mode         String
+  title        String   @default("New conversation")
+  nextSequence Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  turns        ChatTurn[]
+
+  @@index([userId, updatedAt])
+  @@map("chat_conversations")
+}
+
+model ChatTurn {
+  id             String   @id @default(uuid())
+  conversationId String
+  requestId      String
+  sequence       Int
+  prompt         String
+  answer         String?
+  status         String   @default("pending")
+  truncated      Boolean  @default(false)
+  errorCode      String?
+  attemptId      String
+  leaseExpiresAt DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, requestId])
+  @@unique([conversationId, sequence])
+  @@map("chat_turns")
 }
 
 model Athlete {
