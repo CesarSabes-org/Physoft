@@ -9,3 +9,12 @@
   max-width: 100%;
   height: auto;
 }
+
+/* Colors as classes (not SVG attributes) so themed containers can override them */
+.capacity-radar-grid {
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+.capacity-radar-label {
+  fill: rgba(255, 255, 255, 0.75);
+}

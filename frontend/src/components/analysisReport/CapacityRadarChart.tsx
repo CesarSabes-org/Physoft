@@ -71,7 +71,7 @@ function CapacityRadarChart({ axes, maxValue = 100, size = 320, color = '#14b8a6
         <div className={`capacity-radar-chart ${className}`}>
             <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
                 {guideLines.map((path, idx) => (
-                    <polygon key={`guide-${idx}`} points={path} fill="none" stroke="rgba(255, 255, 255, 0.1)" strokeWidth="1" />
+                    <polygon key={`guide-${idx}`} points={path} fill="none" className="capacity-radar-grid" strokeWidth="1" />
                 ))}
 
                 {radialLines.map((line, idx) => (
@@ -81,7 +81,7 @@ function CapacityRadarChart({ axes, maxValue = 100, size = 320, color = '#14b8a6
                         y1={line.y1}
                         x2={line.x2}
                         y2={line.y2}
-                        stroke="rgba(255, 255, 255, 0.1)"
+                        className="capacity-radar-grid"
                         strokeWidth="1"
                     />
                 ))}
@@ -94,7 +94,7 @@ function CapacityRadarChart({ axes, maxValue = 100, size = 320, color = '#14b8a6
 
                 {dataPoints.map((point, idx) => (
                     <g key={`label-${idx}`}>
-                        <text x={point.labelX} y={point.labelY - 8} textAnchor="middle" fill="rgba(255, 255, 255, 0.75)" fontSize="11" fontWeight="bold">
+                        <text x={point.labelX} y={point.labelY - 8} textAnchor="middle" className="capacity-radar-label" fontSize="11" fontWeight="bold">
                             {point.label}
                         </text>
                         <text x={point.labelX} y={point.labelY + 10} textAnchor="middle" fill={color} fontSize="13" fontWeight="bold">

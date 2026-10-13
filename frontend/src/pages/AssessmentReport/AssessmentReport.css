@@ -1,4 +1,63 @@
 /* ============================================
+   PDF EXPORT
+   While the PDF is captured, the paper uses the fixed A4 layout on any
+   screen size (same as print), without the on-screen shadow and corners.
+   ============================================ */
+.report-doc.is-exporting {
+  width: 210mm;
+  max-width: none;
+  margin: 1.75rem 0 0;
+  /* The PDF pages add their own top margin */
+  padding: 2mm 11mm 6mm;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.report-doc.is-exporting .report-doc-header {
+  flex-direction: row;
+  align-items: center;
+}
+
+.report-doc.is-exporting .report-doc-meta,
+.report-doc.is-exporting .report-doc-meta > div {
+  text-align: right;
+  justify-content: flex-end;
+}
+
+.report-doc.is-exporting .report-doc-patient-grid,
+.report-doc.is-exporting .results-overview-grid,
+.report-doc.is-exporting .detailed-analysis-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.report-doc.is-exporting .main-charts-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.report-doc.is-exporting .flex-card-body {
+  grid-template-columns: auto 1fr;
+}
+
+.report-doc.is-exporting .executive-summary-body {
+  grid-template-columns: 1fr 210px;
+}
+
+.report-doc.is-exporting .executive-summary-stats {
+  padding: 0 0 0 1.25rem;
+  border-top: none;
+  border-left: 1px solid var(--paper-line);
+}
+
+.report-doc.is-exporting .sport-report-body {
+  grid-template-columns: 1.3fr 1fr;
+}
+
+.report-doc.is-exporting .report-doc-footer {
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+/* ============================================
    PRINTABLE ASSESSMENT REPORT
    Light A4 document with Physoft branding. On screen it is shown as a
    paper preview over the app's dark background; in print only the paper
@@ -36,6 +95,7 @@
 }
 
 .report-toolbar-back,
+.report-toolbar-print,
 .report-toolbar-download {
   display: inline-flex;
   align-items: center;
@@ -60,30 +120,53 @@
   border-color: var(--color-primary);
 }
 
-.report-toolbar-download {
+.report-toolbar-actions {
+  display: flex;
+  gap: 0.6rem;
   margin-left: auto;
+}
+
+.report-toolbar-print {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.report-toolbar-print:hover:not(:disabled) {
+  color: var(--color-text-primary);
+  border-color: var(--color-primary);
+}
+
+.report-toolbar-download {
+  min-width: 190px;
+  justify-content: center;
   background: var(--color-primary);
   color: #fff;
   border: none;
 }
 
-.report-toolbar-download:hover {
+.report-toolbar-print:disabled,
+.report-toolbar-download:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+.report-toolbar-download:hover:not(:disabled) {
   background: var(--color-primary-dark);
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(20, 184, 166, 0.3);
 }
 
-.report-toolbar-hint {
+.report-toolbar-error {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   font-size: 0.82rem;
-  color: var(--color-text-muted);
+  color: var(--color-error);
 }
 
-.report-toolbar-hint svg {
+.report-toolbar-error svg {
   flex-shrink: 0;
-  color: var(--color-primary);
   font-size: 1rem;
 }
 
@@ -349,12 +432,11 @@
   overflow: visible;
 }
 
-.report-doc .capacity-radar-chart polygon[fill='none'],
-.report-doc .capacity-radar-chart line {
+.report-doc .capacity-radar-grid {
   stroke: #cbd5e1;
 }
 
-.report-doc .capacity-radar-chart g text:first-child {
+.report-doc .capacity-radar-label {
   fill: #334155;
 }
 
@@ -482,9 +564,17 @@
     padding: 0.75rem 1rem;
   }
 
-  .report-toolbar-hint {
+  .report-toolbar-error {
     order: 3;
     width: 100%;
+  }
+
+  .report-toolbar-print span {
+    display: none;
+  }
+
+  .report-toolbar-download {
+    min-width: 0;
   }
 
   .report-doc {
@@ -525,6 +615,65 @@
     border-left: none;
     border-top: 1px solid var(--paper-line);
   }
+}
+
+/* ============================================
+   PDF EXPORT
+   While the PDF is captured, the paper uses the fixed A4 layout on any
+   screen size (same as print), without the on-screen shadow and corners.
+   ============================================ */
+.report-doc.is-exporting {
+  width: 210mm;
+  max-width: none;
+  margin: 1.75rem 0 0;
+  /* The PDF pages add their own top margin */
+  padding: 2mm 11mm 6mm;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.report-doc.is-exporting .report-doc-header {
+  flex-direction: row;
+  align-items: center;
+}
+
+.report-doc.is-exporting .report-doc-meta,
+.report-doc.is-exporting .report-doc-meta > div {
+  text-align: right;
+  justify-content: flex-end;
+}
+
+.report-doc.is-exporting .report-doc-patient-grid,
+.report-doc.is-exporting .results-overview-grid,
+.report-doc.is-exporting .detailed-analysis-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.report-doc.is-exporting .main-charts-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.report-doc.is-exporting .flex-card-body {
+  grid-template-columns: auto 1fr;
+}
+
+.report-doc.is-exporting .executive-summary-body {
+  grid-template-columns: 1fr 210px;
+}
+
+.report-doc.is-exporting .executive-summary-stats {
+  padding: 0 0 0 1.25rem;
+  border-top: none;
+  border-left: 1px solid var(--paper-line);
+}
+
+.report-doc.is-exporting .sport-report-body {
+  grid-template-columns: 1.3fr 1fr;
+}
+
+.report-doc.is-exporting .report-doc-footer {
+  flex-direction: row;
+  align-items: flex-end;
 }
 
 /* ============================================

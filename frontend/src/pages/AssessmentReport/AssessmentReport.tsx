@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { IoArrowBack, IoDownloadOutline, IoSparklesOutline, IoInformationCircleOutline } from 'react-icons/io5'
+import { IoArrowBack, IoDownloadOutline, IoSparklesOutline, IoPrintOutline, IoAlertCircleOutline } from 'react-icons/io5'
 import LoadingSpinner from '@/components/common/feedback/LoadingSpinner'
+import { ButtonLoadingContent } from '@/components/common/feedback/ButtonSpinner'
 import ExecutiveSummaryCard from '@/components/analysisReport/ExecutiveSummaryCard'
 import ResultsOverviewGrid from '@/components/analysisReport/ResultsOverviewGrid'
 import MainChartsSection from '@/components/analysisReport/MainChartsSection'
@@ -13,6 +14,7 @@ import { CHECKLIST_LABELS } from '@/components/analysis/checklistTypes'
 import { useAssessmentReport } from '@/hooks/useAssessmentReport'
 import { BODY_TYPE_LABELS } from '@/constants'
 import { calculateAge, formatBirthDateMMDDYYYY, formatDate } from '@/utils/date.utils'
+import { exportReportPdf } from '@/utils/exportReportPdf'
 import physoftLogo from '@/assets/physoft.png'
 import './AssessmentReport.css'
 
@@ -41,13 +43,16 @@ function fileNameFor(name: string, date: string): string {
 /**
  * Printable assessment report. Same sections and rules as the on-screen
  * report (AnalysisView), laid out as a light A4 document: patient header on
- * top, results below. "Download PDF" opens the browser print dialog, where
- * the document is saved with "Save as PDF".
+ * top, results below. "Download PDF" generates the file in the browser and
+ * downloads it directly; "Print" keeps the browser print dialog available.
  */
 function AssessmentReport() {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
     const { analysis, reportData, loading } = useAssessmentReport(id)
+    const docRef = useRef<HTMLElement>(null)
+    const [exporting, setExporting] = useState(false)
+    const [exportError, setExportError] = useState(false)
 
     // The document title is what the browser proposes as the PDF file name
     useEffect(() => {
@@ -60,6 +65,24 @@ function AssessmentReport() {
     }, [analysis])
 
     const handleBack = () => navigate(`/analysis-view/${id}`)
+
+    const handleDownload = async () => {
+        if (!docRef.current || !analysis || exporting) return
+        setExporting(true)
+        setExportError(false)
+        try {
+            await exportReportPdf(
+                docRef.current,
+                fileNameFor(analysis.athlete?.name ?? 'Patient', analysis.evaluationDate),
+                `Physoft · Clinical & Sports Assessment Report · #${analysis.id}`
+            )
+        } catch (error) {
+            console.error('Error generating PDF:', error)
+            setExportError(true)
+        } finally {
+            setExporting(false)
+        }
+    }
 
     if (loading) {
         return (
@@ -106,16 +129,23 @@ function AssessmentReport() {
                 <button className="report-toolbar-back" onClick={handleBack}>
                     <IoArrowBack /> Back to analysis
                 </button>
-                <div className="report-toolbar-hint">
-                    <IoInformationCircleOutline />
-                    <span>In the print dialog, choose <strong>Save as PDF</strong> as the destination.</span>
+                {exportError && (
+                    <div className="report-toolbar-error" role="alert">
+                        <IoAlertCircleOutline />
+                        <span>The PDF couldn't be generated. Try again, or use Print → Save as PDF.</span>
+                    </div>
+                )}
+                <div className="report-toolbar-actions">
+                    <button className="report-toolbar-print" onClick={() => window.print()} disabled={exporting} title="Open the browser print dialog">
+                        <IoPrintOutline /> <span>Print</span>
+                    </button>
+                    <button className="report-toolbar-download" onClick={handleDownload} disabled={exporting}>
+                        {exporting ? <ButtonLoadingContent text="Generating PDF..." /> : <><IoDownloadOutline /> Download PDF</>}
+                    </button>
                 </div>
-                <button className="report-toolbar-download" onClick={() => window.print()}>
-                    <IoDownloadOutline /> Download PDF
-                </button>
             </div>
 
-            <article className="report-doc">
+            <article className="report-doc" ref={docRef}>
                 {/* Brand header */}
                 <header className="report-doc-header">
                     <div className="report-doc-brand">

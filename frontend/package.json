@@ -22,6 +22,8 @@
     "better-sqlite3": "^12.4.1",
     "concurrently": "^9.2.1",
     "electron": "^38.4.0",
+    "html-to-image": "^1.11.13",
+    "jspdf": "^3.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.5.0",
