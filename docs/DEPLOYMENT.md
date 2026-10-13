@@ -3,7 +3,7 @@
 ## Cómo funciona
 
 - Frontend y backend son **dos proyectos de Vercel** separados.
-- Cada `git push` a `physoft_web` (o a `main`) ejecuta `.github/workflows/deploy-vercel.yml`.
+- Cada `git push` a `main` ejecuta `.github/workflows/deploy-vercel.yml`. Otras ramas no despliegan.
 - El workflow detecta qué carpeta cambió y despliega en producción solo esa parte: `frontend/**`, `backend/**` o ambas.
 - Un cambio que solo toca la raíz o `docs/` no despliega nada.
 

@@ -4,7 +4,7 @@ Plataforma web de evaluación clínica y deportiva de pacientes para fisioterape
 expedientes de pacientes, evaluaciones con resultados medidos, reporte clínico con reglas
 reproducibles, exportación a PDF, análisis de texto asistido por IA y un asistente clínico.
 
-- **Producción:** dos proyectos en Vercel (frontend y backend) desplegados desde la rama `physoft_web`.
+- **Producción:** dos proyectos en Vercel (frontend y backend) desplegados desde la rama `main`.
 - **Idioma:** la interfaz está en inglés; la documentación del equipo, en español.
 
 ## Tecnologías
@@ -66,7 +66,7 @@ Comandos útiles:
 
 ## Flujo de trabajo
 
-- Rama de trabajo y producción: `physoft_web`. Cada push despliega solo la parte que cambió
+- Rama de trabajo y producción: `main`. Cada push despliega solo la parte que cambió
   (frontend y/o backend).
-- La rama `main` conserva la versión de escritorio anterior (Electron); la web ya no la usa.
+- La versión de escritorio anterior (Electron) quedó guardada en el tag `legacy-desktop-electron`.
 - Nunca subir secretos: `.env` y `.claude/settings*.json` están en `.gitignore`.

@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-10-13 · rama `physoft_web`
+Actualizado: 2026-10-13 · rama `main`
 
 ## Funcionalidades en producción
 
