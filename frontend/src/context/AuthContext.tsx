@@ -55,8 +55,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setState({ token: null, user: null, isAuthenticated: false })
   }
 
+  // A token that expires while the app stays open ends the session on the
+  // next navigation instead of leaving a dead session behind.
+  const isAuthenticated = state.isAuthenticated && state.token !== null && !isTokenExpired(state.token)
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout }}>
+    <AuthContext.Provider value={{ ...state, isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   )

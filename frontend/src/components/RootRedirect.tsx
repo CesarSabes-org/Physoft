@@ -1,8 +1,11 @@
-﻿import { Navigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { ROUTES } from '../constants'
 
-export default function RootRedirect() {
+/** Resolves `/` to the right place based on auth state, synchronously. */
+function RootRedirect() {
   const { isAuthenticated } = useAuth()
   return <Navigate to={isAuthenticated ? ROUTES.DASHBOARD : ROUTES.LOGIN} replace />
 }
+
+export default RootRedirect
