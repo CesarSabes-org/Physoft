@@ -69,4 +69,5 @@ No inventarlos; mientras falten, el reporte muestra "Pending reference" o usa el
 
 - **Límite de subida de Vercel (~4.5 MB):** PDFs grandes pueden fallar en el autocompletado con IA.
 - **Lint general del frontend sin configuración:** solo el módulo del chatbot tiene `lint:chat`; `npm run lint` no funciona hasta definir un `.eslintrc`.
-- **Backend sin revisar:** la limpieza de código muerto se hizo en la raíz y en `frontend/` (2026-10-13); falta `backend/`.
+- **Fotos locales heredadas en `backend/public/uploads/athletes/`** (37 archivos versionados en el repo público, servidos en `/uploads`). Todas las subidas nuevas van a Cloudinary. Antes de borrarlas, confirmar en la base que ningún paciente tenga una foto con ruta `/uploads/...`.
+- **`backend/src/presentation/controllers/chatController.ts`** no lo usan la app ni las pruebas (lo reemplazó `conversationController`). Pendiente de que Daniel confirme y lo retire.

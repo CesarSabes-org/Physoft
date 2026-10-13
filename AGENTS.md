@@ -34,8 +34,9 @@ Mantener revisión profesional para contenido individual de rehabilitación.
 - Conservar componentes, estilos y convenciones visuales existentes. La UI actual
   está en inglés; responder en el idioma del usuario, con preferencia de conversación.
 - Separar hooks de conversación, transporte HTTP y presentación React.
-- Crear un servicio de chat independiente de `ai.service.ts` y
-  `claudeAnalysisService.ts`; preservar sus contratos y rutas existentes.
+- Mantener el servicio de chat independiente de `claudeAnalysisService.ts`;
+  preservar sus contratos y rutas existentes. Anthropic es el único proveedor de IA
+  (OpenAI/Gemini y `ai.service.ts` se retiraron el 2026-10-13).
 - Usar el adaptador Anthropic detrás de `ChatProvider` para el chatbot. Modelos
   configurables en servidor; verificar disponibilidad y parámetros antes de fijarlos.
 - No añadir frameworks de agentes, base vectorial o microservicios para el MVP.

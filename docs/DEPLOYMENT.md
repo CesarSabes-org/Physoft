@@ -19,7 +19,8 @@ Secrets que necesita el repositorio en GitHub (Settings → Secrets → Actions)
 ## Proyecto backend (Vercel)
 
 - Root Directory: `backend`. `backend/vercel.json` sirve `src/index.ts` como función serverless con `@vercel/node`; todas las rutas van a la app Express.
-- Variables de entorno: los nombres están en `backend/.env.example`; los valores se cargan solo en Vercel.
+- Variables de entorno: `backend/.env.example` lista todas, con comentarios; los valores se cargan solo en Vercel.
+- La única IA es Anthropic: OpenAI y Gemini se retiraron el 2026-10-13.
 
 | Variable | Para qué sirve |
 | --- | --- |
@@ -31,7 +32,6 @@ Secrets que necesita el repositorio en GitHub (Settings → Secrets → Actions)
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Fotos e imágenes de evidencia |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Autocompletado y análisis de texto con IA |
 | `CHAT_ANTHROPIC_MODEL` | Modelo del asistente clínico |
-| `AI_PROVIDER`, `OPENAI_*`, `GEMINI_*` | Proveedores alternativos heredados (opcionales) |
 
 ## Proyecto frontend (Vercel)
 
