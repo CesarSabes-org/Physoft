@@ -5,7 +5,6 @@ import RootRedirect from './components/RootRedirect'
 import Login from './pages/Login/Login'
 import Dashboard from './pages/Dashboard/Dashboard'
 import Patients from './pages/Patients/Patients'
-import Home from './pages/Home/Home'
 import Analysis from './pages/Analysis/Analysis'
 import AllAnalyses from './pages/AllAnalyses/AllAnalyses'
 import AthleteDetail from './pages/AthleteDetail/AthleteDetail'
@@ -34,7 +33,6 @@ function App() {
         <Route path="/login" element={<Login />} />
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/home" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/patients" element={<Patients />} />
           <Route path="/analysis" element={<Analysis />} />
@@ -53,11 +51,6 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
         </Route>
-
-        {/* Legacy redirects */}
-        <Route path="/welcome" element={<Navigate to="/login" replace />} />
-        <Route path="/all-analysis" element={<Navigate to="/all-analyses" replace />} />
-        <Route path="/configuracion" element={<Navigate to="/settings" replace />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

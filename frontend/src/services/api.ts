@@ -213,24 +213,12 @@ export const athleteAPI = {
       `/athletes/${id}`
     )
     return response.data
-  },
-
-  // Get statistics
-  getStatistics: async () => {
-    const response = await apiClient.get('/athletes/statistics/summary')
-    return response.data
-  },
-
-  // Compare athlete with cohort
-  compare: async (id: string) => {
-    const response = await apiClient.get(`/atletas/${id}/comparar`)
-    return response.data
   }
 }
 
 // Helper function to get full photo URL
 export function getPhotoUrl(photo: string | null | undefined): string {
-  // If no photo, return default placeholder (relative path for Electron)
+  // If no photo, return the default placeholder
   if (!photo || photo === 'default-avatar.png' || photo === '/default-avatar.png') {
     return './default-avatar.png'  // Relative path for Electron
   }
@@ -451,25 +439,6 @@ export const analysisAPI = {
     return response.data
   },
 
-  // Upload additional graph images
-  uploadGraphs: async (id: number, graphs: File[]) => {
-    const formData = new FormData()
-    graphs.forEach((file) => {
-      formData.append('graphs', file)
-    })
-
-    const response = await apiClient.post<{ success: boolean; data: Analysis; message: string }>(
-      `/analyses/${id}/graphs`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    )
-    return response.data
-  },
-
   // Update analysis
   update: async (id: number, analysis: Partial<CreateAnalysisDTO>) => {
     const response = await apiClient.put<{ success: boolean; data: Analysis; message: string }>(
@@ -509,36 +478,6 @@ export const analysisAPI = {
   delete: async (id: number) => {
     const response = await apiClient.delete<{ success: boolean; message: string }>(
       `/analyses/${id}`
-    )
-    return response.data
-  },
-
-  // Get statistics
-  getStatistics: async () => {
-    const response = await apiClient.get('/analyses/statistics/summary')
-    return response.data
-  },
-
-  // Analyze images with AI
-  aiAnalyze: async (images: File[], analysisTypes: any) => {
-    const formData = new FormData()
-
-    // Append images
-    images.forEach((file) => {
-      formData.append('images', file)
-    })
-
-    // Append analysis types as JSON string
-    formData.append('analysisTypes', JSON.stringify(analysisTypes))
-
-    const response = await apiClient.post<{ success: boolean; data: any; message: string }>(
-      '/analyses/ai-analyze',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
     )
     return response.data
   }
@@ -642,5 +581,3 @@ export const claudeAPI = {
     }
   }
 }
-
-export default apiClient

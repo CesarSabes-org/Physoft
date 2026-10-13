@@ -14,7 +14,6 @@ interface SortableTableHeaderProps<T extends string> {
 
 /**
  * Componente de encabezado de tabla ordenable
- * Usado en: TodosAnalisis.tsx, Dashboard, cualquier tabla con ordenamiento
  */
 function SortableTableHeader<T extends string>({
   label,

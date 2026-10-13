@@ -8,7 +8,6 @@ interface LoadingSpinnerProps {
 
 /**
  * Componente reutilizable para estados de carga
- * Usado en: Dashboard, TodosAnalisis, Analisis, DetalleAtleta, AnalysisView
  */
 function LoadingSpinner({ 
   size = 'medium', 

@@ -63,9 +63,10 @@ No inventarlos; mientras falten, el reporte muestra "Pending reference" o usa el
 - [ ] Edit Assessment pierde la hora y puede correr la fecha un día.
 - [ ] Los formularios de edición no permiten vaciar campos.
 - [ ] La vista del reporte en pantalla muestra el somatotipo en español ("Mesomorfo"); el PDF lo muestra en inglés.
+- [ ] En Assessments, la tarjeta "This Week" muestra el total de evaluaciones, no las de la semana (`Analysis.tsx`).
 
 ## Riesgos y deuda técnica
 
 - **Límite de subida de Vercel (~4.5 MB):** PDFs grandes pueden fallar en el autocompletado con IA.
-- **Restos de la versión de escritorio en `frontend/`:** `electron.cjs`, `preload.cjs`, `electron/` y las dependencias `electron` y `better-sqlite3`. Pendientes de revisar y limpiar.
-- **Lint general del frontend sin configuración:** solo el módulo del chatbot tiene `lint:chat`.
+- **Lint general del frontend sin configuración:** solo el módulo del chatbot tiene `lint:chat`; `npm run lint` no funciona hasta definir un `.eslintrc`.
+- **Backend sin revisar:** la limpieza de código muerto se hizo en la raíz y en `frontend/` (2026-10-13); falta `backend/`.

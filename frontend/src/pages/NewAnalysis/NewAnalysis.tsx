@@ -68,7 +68,6 @@ function NewAnalysis() {
   const loadAthletes = async () => {
     try {
       const response = await athleteAPI.getAll()
-      console.log('Athletes loaded:', response.data?.length || 0)
       setAthletes(response.data || [])
       if (response.data?.length === 0) {
         setMensaje({

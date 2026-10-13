@@ -19,7 +19,6 @@ export interface UseFormMessageReturn {
 
 /**
  * Hook to manage form messages (success/error/warning/info)
- * Used in: NewAnalysis.tsx, AddAthlete.tsx, AnalysisForm.tsx
  */
 export function useFormMessage(): UseFormMessageReturn {
   const [message, setMessage] = useState<Message | null>(null)

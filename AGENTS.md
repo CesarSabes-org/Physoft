@@ -4,9 +4,8 @@
 
 Aplicación de análisis deportivo. Frontend React 18 + TypeScript + Vite, React Router,
 Zustand y CSS existente. Backend Express + TypeScript, Prisma 5 y PostgreSQL (Supabase).
-Se despliega como web en Vercel; el empaquetado de Electron se retiró de la raíz.
-`frontend/` aún conserva archivos heredados de Electron y SQLite/localStorage: no asumir
-que ese almacenamiento es la fuente de datos del backend actual.
+Se despliega como web en Vercel; Electron y el almacenamiento local SQLite se retiraron.
+La única fuente de datos es la API del backend (Prisma + PostgreSQL).
 Estado, pendientes y despliegue: `docs/PROJECT_STATUS.md` y `docs/DEPLOYMENT.md`.
 
 ## Trabajo del chatbot

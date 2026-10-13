@@ -61,21 +61,6 @@ export function formatBirthDateMMDDYYYY(isoDate: string | null | undefined): str
 }
 
 /**
- * Format date to month/year for filters
- */
-export function formatMonthYear(date: string | Date): string {
-  const dateObj = new Date(date)
-  return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`
-}
-
-/**
- * Check if two dates are in the same month
- */
-export function isSameMonth(date1: string | Date, date2: string | Date): boolean {
-  return formatMonthYear(date1) === formatMonthYear(date2)
-}
-
-/**
  * Get relative time (e.g., "2 days ago")
  */
 export function getRelativeTime(date: string | Date | null | undefined): string {

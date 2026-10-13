@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 
 /**
  * Hook para monitorear estado de conexión a internet
- * Usado en: NuevoAnalisis.tsx, FormularioAnalisis.tsx
  */
 export function useOnlineStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine)

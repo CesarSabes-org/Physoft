@@ -14,7 +14,6 @@ interface EmptyStateProps {
 
 /**
  * Componente reutilizable para estados vacíos
- * Usado en: Dashboard, TodosAnalisis, Analisis, AtletaSelectionModal
  */
 function EmptyState({ 
   icon, 
