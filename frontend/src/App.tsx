@@ -14,6 +14,7 @@ import EditAthlete from './pages/EditAthlete/EditAthlete'
 import NewAnalysis from './pages/NewAnalysis/NewAnalysis'
 import EditAnalysis from './pages/EditAnalysis/EditAnalysis'
 import AnalysisView from './pages/AnalysisView/AnalysisView'
+import AssessmentReport from './pages/AssessmentReport/AssessmentReport'
 import Analytics from './pages/Analytics/Analytics'
 import Reports from './pages/Reports/Reports'
 import Protocols from './pages/Protocols/Protocols'
@@ -44,6 +45,7 @@ function App() {
           <Route path="/new-analysis" element={<NewAnalysis />} />
           <Route path="/analysis/edit/:id" element={<EditAnalysis />} />
           <Route path="/analysis-view/:id" element={<AnalysisView />} />
+          <Route path="/analysis-view/:id/report" element={<AssessmentReport />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/protocols" element={<Protocols />} />

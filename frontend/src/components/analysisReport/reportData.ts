@@ -7,7 +7,7 @@
 // ============================================
 
 import type { Analysis } from '@/services/api'
-import type { ClinicalResults, ClinicalSectionKey, ResultStatus } from '@/types/clinicalResults.types'
+import type { ClinicalResults, ClinicalSectionKey, DominantSide, ResultStatus } from '@/types/clinicalResults.types'
 import {
     FALL_RISK_LABELS,
     FATIGUE_SUMMARY_LABEL,
@@ -330,4 +330,41 @@ export function buildProgressRows(data: ReportData): ProgressRow[] {
             change: Math.round((currentValue - (metric.read(last) as number)) * 100) / 100
         }]
     })
+}
+
+// --------------------------------------------
+// Patient values recorded at this evaluation
+// --------------------------------------------
+
+export interface PatientSnapshotView {
+    weightLbs: number | null
+    heightFt: number | null
+    somatotype: string | null
+    dominantSide: DominantSide | null
+    /** Sport chosen for this assessment; older assessments fall back to the patient's profile sport */
+    reportSport: string | null
+    /** True when weight/height/somatotype come from the current profile, not from this evaluation */
+    fromProfile: boolean
+}
+
+export const DOMINANT_SIDE_LABELS: Record<string, string> = {
+    RIGHT: 'Right',
+    LEFT: 'Left',
+    AMBIDEXTROUS: 'Ambidextrous'
+}
+
+/** Values recorded at this evaluation; older assessments fall back to the current profile. */
+export function resolvePatientSnapshot(data: ReportData): PatientSnapshotView {
+    const { snapshot } = data.results
+    const athlete = data.analysis.athlete
+    const hasSnapshot = snapshot.weightLbs !== null || snapshot.heightFt !== null || snapshot.somatotype !== null
+
+    return {
+        weightLbs: hasSnapshot ? snapshot.weightLbs : athlete?.weight ?? null,
+        heightFt: hasSnapshot ? snapshot.heightFt : athlete?.height ?? null,
+        somatotype: hasSnapshot ? snapshot.somatotype : athlete?.bodyType ?? null,
+        dominantSide: snapshot.dominantSide,
+        reportSport: snapshot.sport ?? athlete?.sport ?? null,
+        fromProfile: !hasSnapshot
+    }
 }

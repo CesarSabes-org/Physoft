@@ -1,0 +1,659 @@
+/* ============================================
+   PRINTABLE ASSESSMENT REPORT
+   Light A4 document with Physoft branding. On screen it is shown as a
+   paper preview over the app's dark background; in print only the paper
+   remains. The report sections are the same components as AnalysisView,
+   re-themed here for paper (scoped to .report-doc, so the app is untouched).
+   ============================================ */
+
+.report-screen {
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  padding-bottom: 3rem;
+}
+
+.report-screen-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Toolbar (screen only) ---------- */
+.report-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.5rem;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.report-toolbar-back,
+.report-toolbar-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.report-toolbar-back {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.report-toolbar-back:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-primary);
+}
+
+.report-toolbar-download {
+  margin-left: auto;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+}
+
+.report-toolbar-download:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(20, 184, 166, 0.3);
+}
+
+.report-toolbar-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.report-toolbar-hint svg {
+  flex-shrink: 0;
+  color: var(--color-primary);
+  font-size: 1rem;
+}
+
+/* ---------- Paper ---------- */
+.report-doc {
+  /* Paper palette: overrides the app's dark tokens for every section inside */
+  --color-bg-secondary: #ffffff;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #334155;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --paper-surface: #f8fafc;
+  --paper-line: #e2e8f0;
+  --paper-accent: #0f766e;
+
+  color-scheme: light;
+  width: 210mm;
+  max-width: calc(100% - 2rem);
+  margin: 1.75rem auto 0;
+  padding: 12mm 11mm 10mm; /* same content width as the printed page (A4 minus 11mm side margins) */
+  background: #ffffff;
+  color: var(--color-text-primary);
+  border-radius: 6px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  font-size: 13px;
+}
+
+/* ---------- Brand header ---------- */
+.report-doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.1rem 1.4rem;
+  background: linear-gradient(120deg, #0a0a0a 0%, #111827 70%, #134e4a 100%);
+  border-radius: 12px;
+  border-bottom: 4px solid #14b8a6;
+  color: #ffffff;
+}
+
+.report-doc-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.report-doc-brand img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.report-doc-brand > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.report-doc-brand-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #2dd4bf;
+}
+
+.report-doc-brand-tagline {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.report-doc-meta {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  text-align: right;
+}
+
+.report-doc-meta > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+}
+
+.report-doc-meta dt {
+  color: #94a3b8;
+}
+
+.report-doc-meta dd {
+  margin: 0;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* ---------- Patient ---------- */
+.report-doc-patient {
+  margin-top: 1rem;
+  padding: 1.1rem 1.3rem;
+  border: 1px solid var(--paper-line);
+  border-left: 5px solid #14b8a6;
+  border-radius: 12px;
+  background: var(--paper-surface);
+}
+
+.report-doc-patient-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 0.9rem;
+}
+
+.report-doc-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #14b8a6;
+  flex-shrink: 0;
+}
+
+.report-doc-avatar-initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ccfbf1;
+  color: var(--paper-accent);
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.report-doc-eyebrow {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--paper-accent);
+}
+
+.report-doc-patient h1 {
+  margin: 0;
+  font-size: 1.45rem;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+
+.report-doc-patient-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem 1.25rem;
+  margin: 0;
+}
+
+.report-doc-patient-grid > div {
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--paper-line);
+}
+
+.report-doc-patient-grid dt {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.report-doc-patient-grid dd {
+  margin: 0.1rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.report-doc-footnote {
+  margin: 0.75rem 0 0;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Sections re-themed for paper ---------- */
+.report-doc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  margin-top: 1.4rem;
+}
+
+.report-doc .analysis-section {
+  background: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+.report-doc .analysis-section h2 {
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--paper-accent);
+  border-bottom: 2px solid #14b8a6;
+}
+
+.report-doc .analysis-section-note {
+  margin: -0.4rem 0 0.8rem;
+  font-size: 0.75rem;
+}
+
+.report-doc .chart-card,
+.report-doc .results-overview-card,
+.report-doc .detailed-analysis-column,
+.report-doc .compensation-list > li,
+.report-doc .sport-report-metric,
+.report-doc .sport-report-image {
+  background: var(--paper-surface);
+  border-color: var(--paper-line);
+}
+
+.report-doc .chart-card {
+  padding: 1rem 1.1rem;
+  border-radius: 10px;
+}
+
+.report-doc .chart-card-footer,
+.report-doc .report-kv > div,
+.report-doc .flex-card-tests li,
+.report-doc .rom-table th,
+.report-doc .rom-table td {
+  border-color: var(--paper-line);
+}
+
+.report-doc .report-rating-pill {
+  border-color: var(--paper-line);
+}
+
+.report-doc .report-rating-pill.active {
+  background: #ffffff;
+}
+
+.report-doc .muscular-balance-split {
+  background: var(--paper-line);
+}
+
+.report-doc .sport-report-placeholder,
+.report-doc .sport-report-phase-bar {
+  border-color: #cbd5e1;
+  background: var(--paper-surface);
+}
+
+.report-doc .flex-card-evidence img {
+  border-color: var(--paper-line);
+}
+
+/* Radar chart: grid and axis labels are drawn for the dark theme; long
+   labels ("Shoulder mobility") reach past the SVG box, so let them show */
+.report-doc .capacity-radar-chart svg {
+  overflow: visible;
+}
+
+.report-doc .capacity-radar-chart polygon[fill='none'],
+.report-doc .capacity-radar-chart line {
+  stroke: #cbd5e1;
+}
+
+.report-doc .capacity-radar-chart g text:first-child {
+  fill: #334155;
+}
+
+/* Fixed paper layout: the app's responsive breakpoints don't apply to A4 */
+.report-doc .executive-summary-body {
+  grid-template-columns: 1fr 210px;
+  gap: 1.5rem;
+}
+
+.report-doc .executive-summary-stats {
+  min-width: 0;
+  max-width: none;
+  padding: 0 0 0 1.25rem;
+  border-top: none;
+  border-left: 1px solid var(--paper-line);
+}
+
+.report-doc .results-overview-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.report-doc .results-overview-card {
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+}
+
+.report-doc .main-charts-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.report-doc .main-charts-grid > .chart-card:first-child {
+  /* Flexibility: radar beside the test list, full width, so it isn't a page-tall card */
+  grid-column: 1 / -1;
+}
+
+.report-doc .flex-card-body {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 2.5rem;
+  padding-left: 1.5rem;
+}
+
+.report-doc .flex-card-tests {
+  width: 100%;
+}
+
+.report-doc .detailed-analysis-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.report-doc .sport-report-body {
+  grid-template-columns: 1.3fr 1fr;
+}
+
+/* ---------- AI text ---------- */
+.report-doc-ai-item {
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.65rem;
+  border: 1px solid var(--paper-line);
+  border-radius: 10px;
+  background: var(--paper-surface);
+}
+
+.report-doc-ai-item h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  color: var(--paper-accent);
+}
+
+.report-doc-ai-item p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Footer ---------- */
+.report-doc-footer {
+  display: flex;
+  align-items: flex-end;
+  gap: 2rem;
+  margin-top: 1.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--paper-line);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.report-doc-footer-text {
+  flex: 1;
+}
+
+.report-doc-signature {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 0 0 230px;
+  text-align: center;
+}
+
+.report-doc-signature-line {
+  display: block;
+  height: 2.2rem;
+  border-bottom: 1px solid #94a3b8;
+}
+
+.report-doc-footer p {
+  margin: 0;
+}
+
+.report-doc-footer-brand {
+  margin-top: 0.4rem !important;
+  font-weight: 700;
+  color: var(--paper-accent);
+}
+
+/* ---------- Small screens: preview stays readable ---------- */
+@media (max-width: 860px) {
+  .report-toolbar {
+    flex-wrap: wrap;
+    padding: 0.75rem 1rem;
+  }
+
+  .report-toolbar-hint {
+    order: 3;
+    width: 100%;
+  }
+
+  .report-doc {
+    padding: 1.25rem 1rem;
+  }
+
+  .report-doc-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .report-doc-meta,
+  .report-doc-meta > div {
+    text-align: left;
+    justify-content: flex-start;
+  }
+
+  .report-doc-patient-grid,
+  .report-doc .results-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .report-doc .main-charts-grid,
+  .report-doc .flex-card-body,
+  .report-doc .detailed-analysis-columns,
+  .report-doc .sport-report-body,
+  .report-doc .executive-summary-body {
+    grid-template-columns: 1fr;
+  }
+
+  .report-doc-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .report-doc .executive-summary-stats {
+    padding: 1rem 0 0;
+    border-left: none;
+    border-top: 1px solid var(--paper-line);
+  }
+}
+
+/* ============================================
+   PRINT
+   ============================================ */
+@page {
+  size: A4;
+  margin: 12mm 11mm 14mm;
+
+  @bottom-right {
+    content: 'Page ' counter(page) ' of ' counter(pages);
+    font-size: 8pt;
+    color: #64748b;
+  }
+
+  @bottom-left {
+    content: 'Physoft — Clinical & Sports Assessment Report';
+    font-size: 8pt;
+    color: #64748b;
+  }
+}
+
+@media print {
+  /* The app declares color-scheme: dark, which paints the page margins dark */
+  html {
+    color-scheme: light !important;
+    /* Everything in the report is sized in rem: scale it to paper */
+    font-size: 13px;
+  }
+
+  html,
+  body,
+  #root,
+  .report-screen {
+    background: #ffffff !important;
+    min-height: 0;
+    padding: 0;
+  }
+
+  html {
+    overflow: visible;
+  }
+
+  .report-toolbar {
+    display: none !important;
+  }
+
+  .report-doc {
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    font-size: 11.5px;
+  }
+
+  /* Keep backgrounds and colored accents in the PDF */
+  .report-doc,
+  .report-doc * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Print always uses the A4 layout, even at narrow print widths */
+  .report-doc-header {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .report-doc-meta,
+  .report-doc-meta > div {
+    text-align: right;
+    justify-content: flex-end;
+  }
+
+  .report-doc-patient-grid,
+  .report-doc .results-overview-grid,
+  .report-doc .detailed-analysis-columns {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .report-doc .main-charts-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .report-doc .executive-summary-body {
+    grid-template-columns: 1fr 190px;
+  }
+
+  .report-doc .executive-summary-stats {
+    padding: 0 0 0 1.25rem;
+    border-top: none;
+    border-left: 1px solid var(--paper-line);
+  }
+
+  .report-doc .sport-report-body {
+    grid-template-columns: 1.3fr 1fr;
+  }
+
+  .report-doc .flex-card-body {
+    grid-template-columns: auto 1fr;
+  }
+
+  .report-doc-footer {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+
+  /* Never split a card, a box or a table row across pages */
+  .report-doc-header,
+  .report-doc-patient,
+  .report-doc .chart-card,
+  .report-doc .results-overview-card,
+  .report-doc .detailed-analysis-column,
+  .report-doc-ai-item,
+  .report-doc .executive-summary-findings li,
+  .report-doc .rom-table tr,
+  .report-doc-footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-doc .analysis-section h2 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .report-doc .sport-report-image {
+    max-height: 200px;
+  }
+}

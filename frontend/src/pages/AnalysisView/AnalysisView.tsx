@@ -1,11 +1,10 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { IoPerson, IoTrash, IoCreate, IoSparklesOutline } from 'react-icons/io5'
+import { IoPerson, IoTrash, IoCreate, IoSparklesOutline, IoDocumentTextOutline } from 'react-icons/io5'
 import PageTemplate from '../../components/templates/PageTemplate'
 import LoadingSpinner from '@/components/common/feedback/LoadingSpinner'
 import { ButtonLoadingContent } from '@/components/common/feedback/ButtonSpinner'
 import MiniChatPanel from '@/components/analysis/MiniChatPanel'
-import { analysisAPI, Analysis } from '../../services/api'
 import { useAnalysisStore } from '@/store/analysisStore'
 import { MESSAGES } from '@/constants'
 import ExecutiveSummaryCard from '@/components/analysisReport/ExecutiveSummaryCard'
@@ -14,61 +13,18 @@ import MainChartsSection from '@/components/analysisReport/MainChartsSection'
 import SportReportSection from '@/components/analysisReport/SportReportSection'
 import { hasSportReport } from '@/components/analysisReport/sportAssets'
 import DetailedAnalysisSection from '@/components/analysisReport/DetailedAnalysisSection'
-import { buildReportData } from '@/components/analysisReport/reportData'
+import { DOMINANT_SIDE_LABELS, resolvePatientSnapshot } from '@/components/analysisReport/reportData'
+import { useAssessmentReport } from '@/hooks/useAssessmentReport'
 import { translateBodyType } from '@/utils/translation.utils'
 import './AnalysisView.css'
-
-const DOMINANT_SIDE_LABELS: Record<string, string> = {
-  RIGHT: 'Right',
-  LEFT: 'Left',
-  AMBIDEXTROUS: 'Ambidextrous'
-}
 
 function AnalysisView() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { deleteAnalysis } = useAnalysisStore()
 
-  const [analysis, setAnalysis] = useState<Analysis | null>(null)
-  const [athleteAnalyses, setAthleteAnalyses] = useState<Analysis[]>([])
-  const [loading, setLoading] = useState(true)
+  const { analysis, reportData, loading } = useAssessmentReport(id)
   const [deleting, setDeleting] = useState(false)
-
-  useEffect(() => {
-    const loadAnalysis = async () => {
-      if (!id) return
-
-      try {
-        setLoading(true)
-
-        // Always read the report from the API: the store copy may lack the
-        // full patient record (sex, profile) the report rules need.
-        const response = await analysisAPI.getById(parseInt(id))
-        setAnalysis(response.data)
-
-        // Earlier visits for Progress Over Time — non-fatal if unavailable
-        try {
-          const history = await analysisAPI.getByAthleteId(response.data.athleteId)
-          setAthleteAnalyses(history.data)
-        } catch (historyError) {
-          console.error('Error loading previous assessments:', historyError)
-          setAthleteAnalyses([])
-        }
-      } catch (error) {
-        console.error('Error loading analysis:', error)
-        setAnalysis(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadAnalysis()
-  }, [id])
-
-  const reportData = useMemo(
-    () => (analysis ? buildReportData(analysis, athleteAnalyses) : null),
-    [analysis, athleteAnalyses]
-  )
 
   const handleDelete = async () => {
     if (!id || !analysis) return
@@ -124,7 +80,14 @@ function AnalysisView() {
       {/* Custom Action Buttons */}
       <div className="page-header">
         <div className="page-title-section">
-          <div className="page-actions" style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
+          <div className="page-actions" style={{ display: 'flex', gap: '1rem', marginLeft: 'auto', flexWrap: 'wrap' }}>
+            <button
+              className="btn-secondary analysis-pdf-button"
+              onClick={() => navigate(`/analysis-view/${id}/report`)}
+              title="Preview the report as a document and save it as PDF"
+            >
+              <IoDocumentTextOutline /> Download PDF
+            </button>
             <button
               className="btn-primary btn-primary-large"
               onClick={() => navigate(`/analysis/edit/${id}`)}
@@ -186,27 +149,22 @@ function AnalysisView() {
                 </div>
               )}
               {(() => {
-                // Values recorded at this evaluation; older assessments fall back to the current profile
-                const snapshot = reportData.results.snapshot
-                const hasSnapshot = snapshot.weightLbs !== null || snapshot.heightFt !== null || snapshot.somatotype !== null
-                const weight = hasSnapshot ? snapshot.weightLbs : analysis.athlete?.weight ?? null
-                const height = hasSnapshot ? snapshot.heightFt : analysis.athlete?.height ?? null
-                const somatotype = hasSnapshot ? snapshot.somatotype : analysis.athlete?.bodyType ?? null
-                const suffix = hasSnapshot ? '' : ' (current profile)'
+                const patient = resolvePatientSnapshot(reportData)
+                const suffix = patient.fromProfile ? ' (current profile)' : ''
                 return (
                   <>
                     <div>
-                      <strong>Weight:</strong> {weight !== null ? `${weight} lbs${suffix}` : 'Not recorded'}
+                      <strong>Weight:</strong> {patient.weightLbs !== null ? `${patient.weightLbs} lbs${suffix}` : 'Not recorded'}
                     </div>
                     <div>
-                      <strong>Height:</strong> {height !== null ? `${height} ft${suffix}` : 'Not recorded'}
+                      <strong>Height:</strong> {patient.heightFt !== null ? `${patient.heightFt} ft${suffix}` : 'Not recorded'}
                     </div>
                     <div>
-                      <strong>Somatotype:</strong> {somatotype ? `${translateBodyType(somatotype)}${suffix}` : 'Not recorded'}
+                      <strong>Somatotype:</strong> {patient.somatotype ? `${translateBodyType(patient.somatotype)}${suffix}` : 'Not recorded'}
                     </div>
                     <div>
                       <strong>Dominant side (declared):</strong>{' '}
-                      {snapshot.dominantSide ? DOMINANT_SIDE_LABELS[snapshot.dominantSide] : 'Not declared'}
+                      {patient.dominantSide ? DOMINANT_SIDE_LABELS[patient.dominantSide] : 'Not declared'}
                     </div>
                   </>
                 )
@@ -221,7 +179,7 @@ function AnalysisView() {
         <MainChartsSection data={reportData} />
         {/* Sport chosen for this assessment; older assessments fall back to the patient's profile sport */}
         {(() => {
-          const reportSport = reportData.results.snapshot.sport ?? analysis.athlete?.sport
+          const reportSport = resolvePatientSnapshot(reportData).reportSport
           return hasSportReport(reportSport) && <SportReportSection sport={reportSport} />
         })()}
         <DetailedAnalysisSection data={reportData} />
