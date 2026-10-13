@@ -3,13 +3,21 @@
    ============================================ */
 
 .login-container {
+  /* Full viewport on every screen size (dvh avoids the mobile URL-bar jump) */
   min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 1.5rem;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  isolation: isolate;
+  background:
+    radial-gradient(120% 80% at 50% 0%, #0f2e2b 0%, transparent 60%),
+    radial-gradient(90% 70% at 50% 110%, #0b2422 0%, transparent 55%),
+    #070909;
   animation: fadeIn 0.8s ease-in;
 }
 
@@ -17,9 +25,17 @@
   position: relative;
   z-index: 10;
   text-align: center;
-  padding: var(--spacing-xl);
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
+  padding: 2.5rem 2.25rem 2rem;
+  background: rgba(17, 20, 20, 0.62);
+  border: 1px solid rgba(45, 212, 191, 0.14);
+  border-radius: 24px;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   animation: slideUp 1s ease-out;
 }
 
@@ -212,50 +228,96 @@
   opacity: 0.6;
 }
 
-/* Animated background with gradient orbs */
-.animated-background {
+/* ---------- Background (pure CSS, scales with the viewport) ---------- */
+.login-background {
   position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  z-index: 1;
-  overflow: hidden;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
-.gradient-orb {
+/* Faint grid that fades out toward the edges */
+.login-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(45, 212, 191, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 212, 191, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000 20%, transparent 75%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000 20%, transparent 75%);
+}
+
+/* Glows sized in vmax so they stay proportional on phones and wide monitors */
+.login-glow {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.4;
-  animation: float 20s ease-in-out infinite;
+  filter: blur(70px);
+  opacity: 0.55;
+  will-change: transform;
 }
 
-.orb-1 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
-  top: -250px;
-  left: -250px;
-  animation-delay: 0s;
+.login-glow-1 {
+  width: 55vmax;
+  height: 55vmax;
+  top: -28vmax;
+  left: -18vmax;
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.55) 0%, transparent 65%);
+  animation: glowDrift1 22s ease-in-out infinite;
 }
 
-.orb-2 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, var(--color-primary-light) 0%, transparent 70%);
-  bottom: -200px;
-  right: -200px;
-  animation-delay: 5s;
+.login-glow-2 {
+  width: 48vmax;
+  height: 48vmax;
+  bottom: -26vmax;
+  right: -16vmax;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.45) 0%, transparent 65%);
+  animation: glowDrift2 26s ease-in-out infinite;
 }
 
-.orb-3 {
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, var(--color-primary-dark) 0%, transparent 70%);
+.login-glow-3 {
+  width: 32vmax;
+  height: 32vmax;
   top: 50%;
   left: 50%;
-  animation-delay: 10s;
+  margin: -16vmax 0 0 -16vmax;
+  background: radial-gradient(circle, rgba(13, 148, 136, 0.35) 0%, transparent 65%);
+  opacity: 0.4;
+  animation: glowPulse 12s ease-in-out infinite;
+}
+
+@keyframes glowDrift1 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(6vmax, 4vmax); }
+}
+
+@keyframes glowDrift2 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-5vmax, -4vmax); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.15); opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-glow,
+  .logo-container,
+  .login-title {
+    animation: none;
+  }
+}
+
+@media (max-height: 700px) {
+  .logo-container {
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .login-logo {
+    width: 90px;
+    height: 90px;
+  }
 }
 
 /* ============================================
@@ -308,22 +370,6 @@
   }
 }
 
-@keyframes float {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-}
-
 /* ============================================
    RESPONSIVE
    ============================================ */
@@ -348,12 +394,27 @@
   }
 }
 
+/* ---------- Small screens ---------- */
 @media (max-width: 480px) {
+  .login-container {
+    padding: 1rem;
+  }
+
+  .login-content {
+    padding: 2rem 1.25rem 1.5rem;
+    border-radius: 20px;
+  }
+
+  .login-logo {
+    width: 104px;
+    height: 104px;
+  }
+
   .login-title {
     font-size: 2.2rem;
   }
 
-  .login-content {
-    padding: var(--spacing-md);
+  .login-subtitle {
+    margin-bottom: var(--spacing-lg);
   }
 }
