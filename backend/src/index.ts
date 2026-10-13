@@ -33,7 +33,7 @@ app.set('trust proxy', 1)
 
 // CORS - MUST be before other middleware
 const corsOptions = {
-  origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'http://localhost:4173', 'file://'],
+  origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'http://localhost:4173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -41,7 +41,7 @@ const corsOptions = {
 }
 app.use(cors(corsOptions))
 
-// Health check endpoint (for Electron)
+// Health check endpoint (public; used to verify a deployment)
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', message: 'Backend is running' })
 })
@@ -67,11 +67,6 @@ app.use('/uploads', express.static('public/uploads'))
 // ============================================
 // ROUTES
 // ============================================
-
-// Health check endpoint
-app.get('/api/ping', (_req: Request, res: Response) => {
-  res.json({ message: 'pong', timestamp: new Date().toISOString() })
-})
 
 // Admin provisioning runs through seed:admin, never implicitly on serverless requests.
 

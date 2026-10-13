@@ -11,9 +11,6 @@ import { AnalysisController } from '../controllers/analysisController'
 
 const router = Router()
 
-// Special routes (must come BEFORE routes with :id)
-router.get('/statistics/summary', AthleteController.estadisticas) // GET /api/athletes/statistics/summary
-
 // Athlete CRUD routes
 router.get('/', AthleteController.getAll)           // GET /api/athletes (with optional filters)
 router.get('/:id', AthleteController.getById)       // GET /api/athletes/:id
@@ -26,8 +23,5 @@ router.post('/:id/photo', uploadSinglePhoto, AthleteController.uploadPhoto)  // 
 
 // Athlete analyses route
 router.get('/:athleteId/analyses', AnalysisController.getByAthlete)  // GET /api/athletes/:athleteId/analyses
-
-// Comparison route
-router.get('/:id/compare', AthleteController.comparar)  // GET /api/athletes/:id/compare
 
 export default router

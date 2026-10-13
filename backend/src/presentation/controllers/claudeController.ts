@@ -141,9 +141,8 @@ export class ClaudeController {
       // a demographics lookup failure can't fail the AI call itself.
       const patientDemographics = await fetchPatientDemographics(patientId as string | undefined)
 
-      // Lazy import: mirrors the existing ai.service.ts pattern, so a missing
-      // ANTHROPIC_API_KEY only surfaces when this endpoint is actually used,
-      // not at server boot.
+      // Lazy import, so a missing ANTHROPIC_API_KEY only surfaces when this
+      // endpoint is actually used, not at server boot.
       let claudeAnalysisService: typeof import('../../application/services/claudeAnalysisService').default
       try {
         claudeAnalysisService = (await import('../../application/services/claudeAnalysisService')).default

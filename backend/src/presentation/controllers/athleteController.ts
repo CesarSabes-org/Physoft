@@ -7,7 +7,6 @@
 import { Request, Response } from 'express'
 import { randomUUID } from 'crypto'
 import { prisma } from '../../infrastructure/prismaClient'
-import { ComparisonService } from '../../application/services/ComparisonService'
 import { UploadService } from '../../application/services/uploadService'
 
 // Helper function to generate next access code
@@ -368,87 +367,6 @@ export class AthleteController {
       return res.status(500).json({
         success: false,
         error: 'Error deleting patient',
-      })
-    }
-  }
-
-  /**
-   * GET /api/athletes/:id/compare
-   * Compare an athlete with their cohort
-   */
-  static async comparar(req: Request, res: Response) {
-    try {
-      const { id } = req.params
-      const result = await ComparisonService.compareWithCohort(id)
-
-      return res.json({
-        success: true,
-        data: result,
-      })
-    } catch (error) {
-      console.error('Error comparing athlete:', error)
-      return res.status(500).json({
-        success: false,
-        error: 'Error comparing patient',
-      })
-    }
-  }
-
-  /**
-   * GET /api/athletes/statistics/summary
-   * Get general athlete statistics
-   */
-  static async estadisticas(_req: Request, res: Response) {
-    try {
-      const total = await prisma.athlete.count({
-        where: { deletedAt: null }
-      })
-
-      const byGender = await prisma.athlete.groupBy({
-        by: ['gender'],
-        where: { deletedAt: null },
-        _count: true
-      })
-
-      const bySport = await prisma.athlete.groupBy({
-        by: ['sport'],
-        where: { deletedAt: null },
-        _count: true
-      })
-
-      const byBodyType = await prisma.athlete.groupBy({
-        by: ['bodyType'],
-        where: { deletedAt: null },
-        _count: true
-      })
-
-      // Average height and weight
-      const averages = await prisma.athlete.aggregate({
-        where: { deletedAt: null },
-        _avg: {
-          height: true,
-          weight: true
-        }
-      })
-
-      return res.json({
-        success: true,
-        data: {
-          total,
-          byGender,
-          bySport,
-          byBodyType,
-          averages: {
-            height: averages._avg.height || 0,
-            weight: averages._avg.weight || 0
-          }
-        }
-      })
-    } catch (error) {
-      console.error('Error fetching statistics:', error)
-      return res.status(500).json({
-        success: false,
-        error: 'Error fetching statistics'
       })
     }
   }

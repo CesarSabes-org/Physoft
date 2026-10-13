@@ -28,17 +28,13 @@ const fileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterC
     }
 }
 
-// Export configured multer instance
-export const upload = multer({
+const upload = multer({
     storage,
     fileFilter,
     limits: {
         fileSize: 5 * 1024 * 1024 // 5MB max file size
     }
 })
-
-// Also export as uploadMemory for backward compatibility
-export const uploadMemory = upload
 
 /**
  * Wraps a multer middleware so rejected uploads (wrong type, too large)
@@ -64,8 +60,6 @@ function withUploadErrorHandling(
 }
 
 export const uploadSinglePhoto = withUploadErrorHandling(upload.single('photo'))
-export const uploadGraphImages = withUploadErrorHandling(upload.array('graphs', 10))
-export const uploadAiAnalyzeImages = withUploadErrorHandling(upload.array('images', 10))
 
 // Analysis creation accepts both graph images ('graphs') and, per Flexibility
 // Assessment exercise, an optional evidence photo under its own field name
