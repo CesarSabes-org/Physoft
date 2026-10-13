@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { IoLogInOutline, IoAlertCircle } from 'react-icons/io5'
+import { IoLogInOutline, IoAlertCircle, IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5'
 import PageTemplate from '../../components/templates/PageTemplate'
 import { ButtonLoadingContent } from '../../components/common/feedback/ButtonSpinner'
 import { useAuth } from '../../hooks'
@@ -15,6 +15,7 @@ function Login() {
     const destination = typeof from === 'string' && from.startsWith('/') && !from.startsWith('//') && !from.startsWith('/login') ? from : ROUTES.DASHBOARD
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -78,16 +79,29 @@ function Login() {
 
                         <div className="login-field">
                             <label htmlFor="login-password">Password</label>
-                            <input
-                                id="login-password"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                                autoComplete="current-password"
-                                required
-                                disabled={isSubmitting}
-                            />
+                            <div className="login-password-wrap">
+                                <input
+                                    id="login-password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    autoComplete="current-password"
+                                    required
+                                    disabled={isSubmitting}
+                                />
+                                <button
+                                    type="button"
+                                    className="login-password-toggle"
+                                    onClick={() => setShowPassword((visible) => !visible)}
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                    aria-pressed={showPassword}
+                                    title={showPassword ? 'Hide password' : 'Show password'}
+                                    disabled={isSubmitting}
+                                >
+                                    {showPassword ? <IoEyeOffOutline /> : <IoEyeOutline />}
+                                </button>
+                            </div>
                         </div>
 
                         <button type="submit" className="login-button" disabled={isSubmitting}>
