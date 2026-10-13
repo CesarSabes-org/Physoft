@@ -189,3 +189,7 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Claude Code local settings (machine-specific permissions; may contain secrets)
+.claude/settings.json
+.claude/settings.local.json
