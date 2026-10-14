@@ -1,9 +1,24 @@
-﻿.assistant {
-  max-width: 940px;
+.assistant {
+  width: 100%;
+  max-width: 860px;
+  min-height: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 14px;
+}
+/* With messages, the transcript takes the free height and the composer stays at the bottom */
+.assistant--conversation {
+  height: 100%;
+  justify-content: flex-start;
+}
+.assistant--conversation .assistant-transcript-wrap {
+  flex: 1;
+  min-height: 0;
+}
+.assistant--conversation .assistant-transcript {
+  height: 100%;
 }
 .assistant button,
 .assistant textarea {
@@ -21,12 +36,6 @@
 .assistant-transcript:focus-visible {
   outline: 2px solid var(--color-primary-light);
   outline-offset: 4px;
-}
-.assistant-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 16px;
 }
 .assistant-new {
   display: flex;
@@ -523,15 +532,6 @@
   }
 }
 @media (max-width: 540px) {
-  .assistant-page .page-content {
-    padding: 20px 16px;
-  }
-  .assistant-page .page-title {
-    font-size: 1.65rem;
-  }
-  .assistant-page .page-subtitle {
-    font-size: 0.9rem;
-  }
   .assistant-hero {
     padding: 18px 0;
   }
@@ -590,24 +590,352 @@
     transition: none;
   }
 }
-.assistant-layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 28px; align-items: start; }
-.assistant-layout .assistant { width: 100%; min-width: 0; }
-.assistant-history { border: 1px solid var(--color-border); border-radius: 14px; padding: 14px 8px; min-width: 0; }
-.assistant-history-heading { display: flex; align-items: center; justify-content: space-between; padding: 0 6px 12px; }
-.assistant-history-heading h2 { font-size: .85rem; }
-.assistant-history button { cursor: pointer; color: var(--color-text-secondary); border: 0; background: transparent; }
-.assistant-history-heading button { padding: 7px; }
-.assistant-history > p { font-size: .78rem; color: var(--color-text-secondary); padding: 8px; line-height: 1.6; }
-.assistant-history ul { list-style: none; max-height: 65vh; overflow: auto; }
-.assistant-history li { display: flex; border-radius: 8px; margin-bottom: 4px; }
-.assistant-history li.is-active { background: rgba(20,184,166,.13); }
-.assistant-history-open { text-align: left; flex: 1; min-width: 0; padding: 12px 8px; }
-.assistant-history-open span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .82rem; color: var(--color-text-primary); }
-.assistant-history-open small { display: block; font-size: .67rem; margin-top: 5px; }
-.assistant-history-delete { padding: 8px; align-self: center; }
-.assistant-history button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
-.assistant-focus-locked { color: var(--color-primary-light); font-size: .78rem; padding: 10px 0; }
-@media (max-width: 1100px) {
-  .assistant-layout { grid-template-columns: 1fr; }
-  .assistant-history ul { max-height: 150px; }
+
+/* ============================================
+   FULL-SCREEN LAYOUT
+   Own screen (no app sidebar): top bar, conversation history on the left,
+   the chat centered in the remaining space.
+   ============================================ */
+.assistant-screen {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(70% 45% at 50% 0%, rgba(20, 184, 166, 0.08), transparent 70%),
+    var(--color-bg-primary);
+  color: var(--color-text-primary);
+  overflow: hidden;
+}
+
+.assistant-screen button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.assistant-screen button:focus-visible {
+  outline: 2px solid var(--color-primary-light);
+  outline-offset: 2px;
+}
+
+/* ---------- Top bar ---------- */
+.assistant-topbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--color-border);
+  background: rgba(10, 10, 10, 0.75);
+  backdrop-filter: blur(10px);
+  flex-shrink: 0;
+}
+
+.assistant-topbar-back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.assistant-topbar-back:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-primary);
+}
+
+.assistant-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.assistant-topbar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: #fff;
+  font-size: 1.15rem;
+  box-shadow: 0 6px 18px rgba(20, 184, 166, 0.3);
+}
+
+.assistant-topbar-brand h1 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.assistant-topbar-brand p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.assistant-topbar-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.assistant-history-toggle {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+}
+
+/* ---------- Body: history + centered chat ---------- */
+.assistant-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.assistant-main {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 32px 18px;
+}
+
+/* Full screen: a tighter greeting so focus cards and composer fit without scrolling */
+.assistant-main .assistant-hero {
+  padding: 8px 12px 14px;
+}
+
+/* ---------- Conversation history ---------- */
+.assistant-history {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 18px 12px;
+  border-right: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.assistant-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px 12px;
+}
+
+.assistant-history-heading h2 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.assistant-history-heading > div {
+  display: flex;
+  gap: 2px;
+}
+
+.assistant-history button {
+  color: var(--color-text-secondary);
+  border: 0;
+  background: transparent;
+}
+
+.assistant-history-heading button {
+  display: inline-flex;
+  padding: 7px;
+  border-radius: 8px;
+}
+
+.assistant-history-heading button:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.assistant-history-close {
+  display: none !important;
+}
+
+.assistant-history > p {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  padding: 8px;
+  line-height: 1.6;
+}
+
+.assistant-history ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+}
+
+.assistant-history li {
+  display: flex;
+  border-radius: 10px;
+  margin-bottom: 4px;
+  transition: background var(--transition-fast);
+}
+
+.assistant-history li:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.assistant-history li.is-active {
+  background: rgba(20, 184, 166, 0.13);
+  box-shadow: inset 2px 0 0 var(--color-primary);
+}
+
+.assistant-history-open {
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+  padding: 11px 10px;
+}
+
+.assistant-history-open span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.84rem;
+  color: var(--color-text-primary);
+}
+
+.assistant-history-open small {
+  display: block;
+  font-size: 0.68rem;
+  margin-top: 4px;
+}
+
+.assistant-history-delete {
+  padding: 8px;
+  align-self: center;
+  opacity: 0.6;
+}
+
+.assistant-history li:hover .assistant-history-delete,
+.assistant-history-delete:focus-visible {
+  opacity: 1;
+}
+
+.assistant-history-delete:hover {
+  color: var(--color-error) !important;
+}
+
+.assistant-history-backdrop {
+  display: none;
+}
+
+.assistant-focus-locked {
+  color: var(--color-primary-light);
+  font-size: 0.78rem;
+  padding: 6px 0;
+  text-align: center;
+}
+
+/* ---------- Tablet / phone: history becomes a drawer ---------- */
+@media (max-width: 900px) {
+  .assistant-topbar {
+    grid-template-columns: auto 1fr auto;
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .assistant-topbar-brand {
+    justify-self: center;
+  }
+
+  .assistant-topbar-brand p {
+    display: none;
+  }
+
+  .assistant-history-toggle {
+    display: inline-flex;
+  }
+
+  .assistant-layout {
+    grid-template-columns: minmax(0, 1fr);
+    position: relative;
+  }
+
+  .assistant-history {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 20;
+    width: min(300px, 85vw);
+    background: var(--color-bg-secondary);
+    box-shadow: 12px 0 30px rgba(0, 0, 0, 0.5);
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+
+  .assistant-history.is-open {
+    transform: translateX(0);
+  }
+
+  .assistant-history-close {
+    display: inline-flex !important;
+  }
+
+  .assistant-history-backdrop {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .assistant-main {
+    padding: 18px 16px 12px;
+  }
+}
+
+@media (max-width: 540px) {
+  .assistant-topbar-back span,
+  .assistant-history-toggle span,
+  .assistant-new span {
+    display: none;
+  }
+
+  .assistant-topbar .assistant-new {
+    padding: 9px 10px;
+    font-size: 1rem;
+  }
+
+  .assistant-topbar-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .assistant-topbar-brand h1 {
+    font-size: 0.98rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-history {
+    transition: none;
+  }
 }

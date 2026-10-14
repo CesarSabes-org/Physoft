@@ -1,12 +1,12 @@
-﻿import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { IoSparkles, IoAnalyticsOutline, IoBulbOutline, IoLayersOutline, IoTrendingUpOutline, IoSend, IoAdd, IoStop, IoRefreshOutline, IoArrowDown, IoTrashOutline, IoCheckmark } from 'react-icons/io5'
-import PageTemplate from '../../components/templates/PageTemplate'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { IoSparkles, IoAnalyticsOutline, IoBulbOutline, IoLayersOutline, IoTrendingUpOutline, IoSend, IoAdd, IoStop, IoRefreshOutline, IoArrowDown, IoTrashOutline, IoCheckmark, IoArrowBack, IoChatbubblesOutline, IoClose } from 'react-icons/io5'
 import ChatMessage from '../../components/assistant/ChatMessage'
 import { useAssistantChat } from '../../hooks/useAssistantChat'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { useAuth } from '../../hooks/useAuth'
 import { CHAT_MESSAGE_LIMIT, CHAT_MODE_LABELS, ChatMode } from '../../types/chat.types'
+import { ROUTES } from '../../constants'
 import './Assistant.css'
 
 const CAPABILITIES: { mode: ChatMode; icon: JSX.Element; description: string; placeholder: string }[] = [
@@ -22,6 +22,11 @@ function Assistant() {
     const isOnline = useOnlineStatus()
     const [draft, setDraft] = useState('')
     const [showLatest, setShowLatest] = useState(false)
+    const [historyOpen, setHistoryOpen] = useState(false)
+    const navigate = useNavigate()
+    // History position when the assistant was opened (React Router keeps it in history.state.idx).
+    // Opening chats adds ?chat= entries, so Back steps over all of them at once.
+    const entryIndex = useRef<number>(typeof window.history.state?.idx === 'number' ? window.history.state.idx : 0)
     const composer = useRef<HTMLTextAreaElement>(null)
     const transcript = useRef<HTMLDivElement>(null)
     const nearBottom = useRef(true)
@@ -50,7 +55,18 @@ function Assistant() {
         setShowLatest(false)
         if (chat.send(draft)) setDraft('')
     }
+    // Leave the assistant: back to the screen it was opened from, or Home on a direct visit
+    const goBack = () => {
+        const currentIndex = typeof window.history.state?.idx === 'number' ? window.history.state.idx : entryIndex.current
+        if (entryIndex.current > 0) navigate(-(currentIndex - entryIndex.current + 1))
+        else navigate(ROUTES.DASHBOARD, { replace: true })
+    }
+    const openConversation = (id: string) => {
+        chat.open(id)
+        setHistoryOpen(false)
+    }
     const reset = () => {
+        setHistoryOpen(false)
         chat.reset()
         setDraft('')
         setShowLatest(false)
@@ -59,14 +75,42 @@ function Assistant() {
     }
 
     return (
-        <PageTemplate title="Clinical Assistant" subtitle="A little clarity. A better next step." className="assistant-page">
+        <div className="assistant-screen">
+          <header className="assistant-topbar">
+            <button type="button" className="assistant-topbar-back" onClick={goBack}>
+                <IoArrowBack aria-hidden="true" /> <span>Back</span>
+            </button>
+            <div className="assistant-topbar-brand">
+                <span className="assistant-topbar-icon" aria-hidden="true"><IoSparkles /></span>
+                <div>
+                    <h1>Clinical Assistant</h1>
+                    <p>A little clarity. A better next step.</p>
+                </div>
+            </div>
+            <div className="assistant-topbar-actions">
+                <button type="button" className="assistant-history-toggle" aria-expanded={historyOpen} aria-controls="assistant-history"
+                    onClick={() => setHistoryOpen(open => !open)}>
+                    <IoChatbubblesOutline aria-hidden="true" /> <span>History</span>
+                </button>
+                <button type="button" className="assistant-new" onClick={reset} aria-label="New conversation">
+                    <IoAdd aria-hidden="true" /> <span>New conversation</span>
+                </button>
+            </div>
+          </header>
           <div className="assistant-layout">
-            <aside className="assistant-history" aria-label="Saved conversations">
-                <div className="assistant-history-heading"><h2>Your conversations</h2><button type="button" aria-label="Refresh conversations" onClick={() => void chat.refreshList()}><IoRefreshOutline /></button></div>
+            {historyOpen && <div className="assistant-history-backdrop" aria-hidden="true" onClick={() => setHistoryOpen(false)} />}
+            <aside id="assistant-history" className={`assistant-history ${historyOpen ? 'is-open' : ''}`} aria-label="Saved conversations">
+                <div className="assistant-history-heading">
+                    <h2>Your conversations</h2>
+                    <div>
+                        <button type="button" aria-label="Refresh conversations" onClick={() => void chat.refreshList()}><IoRefreshOutline /></button>
+                        <button type="button" className="assistant-history-close" aria-label="Close conversations" onClick={() => setHistoryOpen(false)}><IoClose /></button>
+                    </div>
+                </div>
                 {chat.listError && <p role="alert">{chat.listError}</p>}
                 {!chat.conversations.length && !chat.listError && <p>Your saved chats will appear here.</p>}
                 <ul>{chat.conversations.map(item => <li key={item.id} className={chat.conversation?.id === item.id ? 'is-active' : ''}>
-                    <button type="button" className="assistant-history-open" onClick={() => chat.open(item.id)} aria-current={chat.conversation?.id === item.id ? 'true' : undefined}>
+                    <button type="button" className="assistant-history-open" onClick={() => openConversation(item.id)} aria-current={chat.conversation?.id === item.id ? 'true' : undefined}>
                         <span>{item.title}</span><small>{CHAT_MODE_LABELS[item.mode]}</small>
                     </button>
                     <button type="button" className="assistant-history-delete" aria-label={`Delete ${item.title}`} onClick={() => {
@@ -74,12 +118,8 @@ function Assistant() {
                     }}><IoTrashOutline /></button>
                 </li>)}</ul>
             </aside>
+            <main className="assistant-main">
             <section className={`assistant ${hasMessages ? 'assistant--conversation' : ''}`} aria-label="Physoft assistant">
-                <header className="assistant-toolbar">
-                    <button type="button" className="assistant-new" onClick={reset}>
-                        <IoAdd aria-hidden="true" /> New conversation
-                    </button>
-                </header>
                 {!hasMessages && !chat.isLoading && <div className="assistant-hero">
                     <div className="assistant-hero-icon"><IoSparkles aria-hidden="true" /></div>
                     <p className="assistant-eyebrow">YOUR PARTNER IN MOVEMENT SCIENCE</p>
@@ -157,8 +197,9 @@ function Assistant() {
                 </form>
                 <p className="assistant-disclaimer">AI guidance supports your professional judgment. Avoid identifying patient details.<br />Conversations are saved to your account. Start a new chat to choose a different focus.</p>
             </section>
+            </main>
           </div>
-        </PageTemplate>
+        </div>
     )
 }
 export default Assistant
