@@ -1,5 +1,6 @@
-import { IoListOutline, IoContractOutline, IoBulbOutline } from 'react-icons/io5'
-import type { ReportData } from './reportData'
+import { IoListOutline, IoContractOutline, IoBulbOutline, IoClipboardOutline } from 'react-icons/io5'
+import ProgressOverTimeCard from './charts/ProgressOverTimeCard'
+import { buildProgressRows, type ReportData } from './reportData'
 import './DetailedAnalysisSection.css'
 
 function BulletColumn({ icon, title, items, emptyText, footnote }: {
@@ -43,33 +44,43 @@ function DetailedAnalysisSection({ data }: { data: ReportData }) {
     const tension = data.results.tensionShortening
     const tensionItems = splitLines(tension.notes)
     const recommendations = splitLines(data.analysis.coachRecommendations)
+    const progressRows = buildProgressRows(data)
 
     return (
         <section className="analysis-section">
-            <h2>Detailed Analysis</h2>
+            <h2>
+                <IoClipboardOutline /> Detailed Analysis
+            </h2>
 
             <div className="detailed-analysis-columns">
                 <BulletColumn
                     icon={<IoListOutline />}
-                    title="Points to Improve"
+                    title="Weak Points / Limitations"
                     items={improvementPoints}
                     emptyText="No limitations documented in the evaluated boxes."
                 />
                 <BulletColumn
                     icon={<IoContractOutline />}
-                    title="Muscle Tension / Shortening"
+                    title="Muscle Tightness / Restrictions"
                     items={tensionItems}
                     emptyText="Not evaluated — requires a specific evaluation."
                     footnote={tensionItems.length > 0 && tension.source ? `Source: ${tension.source}` : undefined}
                 />
                 <BulletColumn
                     icon={<IoBulbOutline />}
-                    title="Main Recommendations"
+                    title="Key Recommendations"
                     items={recommendations}
                     emptyText="No recommendations recorded."
                     footnote={recommendations.length > 0 ? 'Written and reviewed by the professional.' : undefined}
                 />
             </div>
+
+            {/* Only comparable earlier visits (same variable, unit and protocol, a week or more apart) */}
+            {progressRows.length > 0 && (
+                <div className="detailed-analysis-progress">
+                    <ProgressOverTimeCard rows={progressRows} />
+                </div>
+            )}
         </section>
     )
 }

@@ -15,6 +15,9 @@
 }
 
 .chart-card-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
   font-size: 1.02rem;
   font-weight: 700;
   color: var(--color-text-primary, #ffffff);
@@ -167,4 +170,71 @@
 
 .report-rating-pill strong {
   font-size: 0.9rem;
+}
+
+.chart-card-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 7px;
+  background: rgba(20, 184, 166, 0.14);
+  color: var(--report-accent, var(--color-primary, #14b8a6));
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+/* Sub-blocks inside a combined card (e.g. Stability & Balance) */
+.chart-card-subsection + .chart-card-subsection {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--report-line, rgba(255, 255, 255, 0.06));
+}
+
+.chart-card-subsection h4 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0 0 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary, #a3a3a3);
+}
+
+.chart-card-subsection-source {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #737373);
+}
+
+.stability-card-blocks {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Side by side, each column starts its own list of sub-blocks */
+.stability-card-blocks > .chart-card-subsection,
+.stability-card-blocks > div > .chart-card-subsection:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+@media (max-width: 760px) {
+  .stability-card-blocks {
+    grid-template-columns: 1fr;
+  }
+
+  .stability-card-blocks > div > .chart-card-subsection:first-child {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--report-line, rgba(255, 255, 255, 0.06));
+  }
 }

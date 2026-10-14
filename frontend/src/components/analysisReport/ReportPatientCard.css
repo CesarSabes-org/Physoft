@@ -1,0 +1,158 @@
+/* Report header: patient + evaluation. Themed through --report-* tokens
+   (dark app by default; the PDF paper redefines them). */
+
+.report-patient {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 1.5rem;
+  padding: 1.5rem 1.75rem;
+  background: var(--report-surface, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--report-line, rgba(255, 255, 255, 0.08));
+  border-left: 4px solid var(--color-primary, #14b8a6);
+  border-radius: 14px;
+}
+
+.report-patient-identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.report-patient-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-primary, #14b8a6);
+  flex-shrink: 0;
+}
+
+.report-patient-avatar-initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 184, 166, 0.15);
+  color: var(--report-accent, var(--color-primary-light, #2dd4bf));
+  font-weight: 800;
+  font-size: 1.15rem;
+}
+
+.report-patient-eyebrow {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--report-accent, var(--color-primary, #14b8a6));
+}
+
+.report-patient-name {
+  margin: 0.1rem 0 0.15rem;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  color: var(--color-text-primary, #fff);
+}
+
+.report-patient-sub {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #a3a3a3);
+}
+
+.report-patient-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem 1.25rem;
+  margin: 0;
+}
+
+.report-patient-grid > div,
+.report-patient-assessment > div {
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--report-line, rgba(255, 255, 255, 0.08));
+}
+
+.report-patient dt {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted, #737373);
+}
+
+.report-patient dt svg {
+  color: var(--color-primary, #14b8a6);
+  font-size: 0.85rem;
+}
+
+.report-patient dd {
+  margin: 0.15rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #fff);
+}
+
+.report-patient-footnote {
+  margin: 0.75rem 0 0;
+  font-size: 0.72rem;
+  color: var(--color-text-muted, #737373);
+}
+
+.report-patient-assessment {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0;
+  padding-left: 1.5rem;
+  border-left: 1px solid var(--report-line, rgba(255, 255, 255, 0.08));
+}
+
+.report-patient-assessment > div:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.report-patient-progress {
+  display: block;
+  height: 5px;
+  margin-top: 0.35rem;
+  border-radius: 999px;
+  background: var(--report-line, rgba(255, 255, 255, 0.08));
+  overflow: hidden;
+}
+
+.report-patient-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary, #14b8a6);
+}
+
+@media (max-width: 900px) {
+  .report-patient {
+    grid-template-columns: 1fr;
+  }
+
+  .report-patient-assessment {
+    padding-left: 0;
+    border-left: none;
+  }
+
+  .report-patient-assessment > div:first-child {
+    border-top: 1px solid var(--report-line, rgba(255, 255, 255, 0.08));
+    padding-top: 0.45rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .report-patient {
+    padding: 1.1rem;
+  }
+
+  .report-patient-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

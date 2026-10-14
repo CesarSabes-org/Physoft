@@ -45,3 +45,8 @@
   color: #c084fc;
   font-weight: 600;
 }
+
+.rom-pct {
+  font-size: 0.78em;
+  color: var(--color-text-muted, #737373);
+}

@@ -10,21 +10,23 @@
 /** Blocks that must never be split across two pages. */
 const UNBREAKABLE_SELECTORS = [
     '.report-doc-header',
-    '.report-doc-patient',
+    '.report-patient',
+    '.executive-summary-coverage',
+    '.executive-summary-list li',
+    '.capacity-card',
     '.chart-card',
-    '.results-overview-card',
+    '.chart-card-subsection',
     '.detailed-analysis-column',
     '.report-doc-ai-item',
-    '.executive-summary-findings li',
-    '.executive-summary-stats',
     '.rom-table tr',
-    '.sport-report-image',
-    '.sport-report-placeholder',
     '.report-doc-footer'
 ].join(',')
 
 /** Cut this far above a block so no sliver of its border shows at the bottom of the page. */
 const CUT_CLEARANCE_PX = 6
+
+/** A leftover this short at the end is only the document's bottom padding: no page for it. */
+const MIN_LAST_PAGE_PX = 40
 
 /** A section title keeps at least this much of its content on the same page. */
 const HEADING_KEEP_WITH_NEXT_PX = 140
@@ -36,6 +38,12 @@ const MARGIN_BOTTOM_MM = 14
 const FOOTER_BASELINE_MM = 290
 const SIDE_MARGIN_MM = 11
 const PIXEL_RATIO = 2
+/**
+ * Root font size while capturing. The report is sized in rem and the app
+ * shrinks the root font on phones, so a fixed value keeps the PDF identical
+ * on any device.
+ */
+const EXPORT_ROOT_FONT_SIZE = '14px'
 
 /** 1×1 transparent PNG used when an external image (e.g. patient photo) can't be fetched. */
 const TRANSPARENT_PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
@@ -57,7 +65,7 @@ function computePageCuts(doc: HTMLElement, totalHeight: number, pageHeight: numb
 
     const pages: [number, number][] = []
     let start = 0
-    while (start < totalHeight - 1) {
+    while (totalHeight - start > (pages.length > 0 ? MIN_LAST_PAGE_PX : 1)) {
         let cut = Math.min(start + pageHeight, totalHeight)
         if (cut < totalHeight) {
             // Move the cut up to the top of any block it would split
@@ -89,6 +97,9 @@ function computePageCuts(doc: HTMLElement, totalHeight: number, pageHeight: numb
 export async function exportReportPdf(doc: HTMLElement, fileName: string, footerText: string): Promise<void> {
     const [{ toCanvas }, { jsPDF }] = await Promise.all([import('html-to-image'), import('jspdf')])
 
+    const root = document.documentElement
+    const previousRootFontSize = root.style.fontSize
+    root.style.fontSize = EXPORT_ROOT_FONT_SIZE
     doc.classList.add('is-exporting')
     try {
         // Let charts re-measure at the A4 width before capturing
@@ -135,5 +146,6 @@ export async function exportReportPdf(doc: HTMLElement, fileName: string, footer
         pdf.save(`${fileName}.pdf`)
     } finally {
         doc.classList.remove('is-exporting')
+        root.style.fontSize = previousRootFontSize
     }
 }

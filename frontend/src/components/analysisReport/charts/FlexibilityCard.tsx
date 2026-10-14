@@ -18,12 +18,14 @@ const RATING_TONE: Record<FlexibilityRating, Tone> = {
 }
 
 /** Box 1 — four standardized tests (evaluator selection), points and score. */
-function FlexibilityCard({ flexibility }: { flexibility: FlexibilityScore }) {
+function FlexibilityCard({ flexibility, index }: { flexibility: FlexibilityScore; index?: number }) {
     const rated = flexibility.ratedCount > 0
 
     return (
         <ReportCard
-            title="1 · Flexibility"
+            title="Mobility / Flexibility"
+            index={index}
+            wide
             subtitle="Flexibility Score = (P1 + P2 + P3 + P4) / 4"
             source={rated ? 'Form — evaluator selection' : null}
             status={rated ? 'EVALUATED' : 'NOT_EVALUATED'}

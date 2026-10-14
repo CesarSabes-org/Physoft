@@ -25,8 +25,14 @@ Actualizado: 2026-10-13 · rama `main`
 ### Reporte de evaluación
 - Sigue el PDF del cliente "Physoft fuentes y criterios de calificación".
 - Clasificaciones con reglas reproducibles en `frontend/src/utils/clinicalScoring.ts`; sin datos simulados.
-- Secciones: Executive Summary, Results Overview, Results in Detail (casillas 1–9), Movement Compensation Map, Progress Over Time (solo visitas comparables, con al menos 7 días de diferencia), Sport Report y Detailed Analysis.
-- **Exportación a PDF:** `/analysis-view/:id/report` muestra el documento A4 con la marca Physoft. **Download PDF** lo genera y lo descarga directamente; **Print** abre el diálogo de impresión.
+- Estructura del reporte esperado por los fisioterapeutas (la misma en pantalla y en el PDF):
+  1. **Paciente y evaluación:** datos registrados en la evaluación, fecha y hora, deporte evaluado, casillas evaluadas y fuentes.
+  2. **Executive Summary:** cobertura (casillas evaluadas / 9, en lugar de un puntaje global), áreas a trabajar (hallazgos) y fortalezas (las mismas reglas, leídas al revés).
+  3. **Capacity Profile — 7 tarjetas:** Mobility/Flexibility, Explosive Output, Fatigue/Resistance, Stability & Balance, Fall Risk, Muscular Symmetry (EMG), Body Composition. Solo Flexibility muestra un puntaje sobre 100, sin categoría (el cliente no definió cortes).
+  4. **Key Graphs & Analysis — 9 tarjetas:** 1 Flexibilidad, 2 CMJ, 3 Fatiga, 4 Estabilidad (balance + fall risk + marcha), 5 EMG, 6 mapa de compensaciones, 7 ROM (con % de la referencia), 8 InBody, 9 Inertial Force del deporte.
+  5. **Detailed Analysis:** limitaciones, tensión/acortamiento, recomendaciones del profesional y Progress Over Time (solo con visitas comparables, al menos 7 días de diferencia).
+  6. Anexo con el análisis de texto por IA.
+- **Exportación a PDF:** `/analysis-view/:id/report` muestra el documento A4 con la marca Physoft. **Download PDF** lo genera y lo descarga directamente (mismo resultado desde cualquier dispositivo); **Print** abre el diálogo de impresión.
 
 ### Asistente clínico (chatbot)
 - Conversaciones persistentes por usuario con Anthropic y cuatro focos opcionales.

@@ -7,14 +7,14 @@ import ReportCard, { ToneText } from './ReportCard'
  * reference by sex, BMI by WHO category, skeletal muscle reported without
  * a rating (no appropriate reference).
  */
-function BodyCompositionCard({ results, gender }: { results: ClinicalResults; gender: string | null }) {
+function BodyCompositionCard({ results, gender, index }: { results: ClinicalResults; gender: string | null; index?: number }) {
     const s = results.composition
     const fatRef = bodyFatReference(gender)
     const fat = fatRef ? classifyRange(s.bodyFatPct, fatRef.min, fatRef.max) : null
     const bmiCategory = classifyBmi(s.bmi)
 
     return (
-        <ReportCard title="9 · Body Composition – InBody" subtitle="Each parameter on its own" source={s.source} status={effectiveStatus(results, 'composition')}>
+        <ReportCard title="Body Composition – InBody" index={index} subtitle="Each parameter on its own" source={s.source} status={effectiveStatus(results, 'composition')}>
             <dl className="report-kv">
                 <div>
                     <dt>Body fat</dt>

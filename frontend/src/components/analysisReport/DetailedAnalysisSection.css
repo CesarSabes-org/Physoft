@@ -43,3 +43,7 @@
   font-size: 0.75rem;
   color: var(--color-text-muted, #737373);
 }
+
+.detailed-analysis-progress {
+  margin-top: 1rem;
+}

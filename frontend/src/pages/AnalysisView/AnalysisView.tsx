@@ -1,21 +1,18 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { IoPerson, IoTrash, IoCreate, IoSparklesOutline, IoDocumentTextOutline } from 'react-icons/io5'
+import { IoTrash, IoCreate, IoSparklesOutline, IoDocumentTextOutline } from 'react-icons/io5'
 import PageTemplate from '../../components/templates/PageTemplate'
 import LoadingSpinner from '@/components/common/feedback/LoadingSpinner'
 import { ButtonLoadingContent } from '@/components/common/feedback/ButtonSpinner'
 import MiniChatPanel from '@/components/analysis/MiniChatPanel'
 import { useAnalysisStore } from '@/store/analysisStore'
 import { MESSAGES } from '@/constants'
+import ReportPatientCard from '@/components/analysisReport/ReportPatientCard'
 import ExecutiveSummaryCard from '@/components/analysisReport/ExecutiveSummaryCard'
-import ResultsOverviewGrid from '@/components/analysisReport/ResultsOverviewGrid'
-import MainChartsSection from '@/components/analysisReport/MainChartsSection'
-import SportReportSection from '@/components/analysisReport/SportReportSection'
-import { hasSportReport } from '@/components/analysisReport/sportAssets'
+import CapacityProfileSection from '@/components/analysisReport/CapacityProfileSection'
+import KeyGraphsSection from '@/components/analysisReport/KeyGraphsSection'
 import DetailedAnalysisSection from '@/components/analysisReport/DetailedAnalysisSection'
-import { DOMINANT_SIDE_LABELS, resolvePatientSnapshot } from '@/components/analysisReport/reportData'
 import { useAssessmentReport } from '@/hooks/useAssessmentReport'
-import { translateBodyType } from '@/utils/translation.utils'
 import './AnalysisView.css'
 
 function AnalysisView() {
@@ -127,61 +124,11 @@ function AnalysisView() {
       </div>
 
       <div className="analysis-view-container">
-        {/* Patient Information */}
-        {analysis.athlete && (
-          <section className="analysis-section">
-            <h2>
-              <IoPerson /> Patient Information
-            </h2>
-            <div className="athlete-info-grid">
-              <div>
-                <strong>Name:</strong> {analysis.athlete.name}
-              </div>
-              <div>
-                <strong>Code:</strong> {analysis.athlete.accessCode}
-              </div>
-              <div>
-                <strong>Sport:</strong> {analysis.athlete.sport}
-              </div>
-              {reportData.results.snapshot.sport && (
-                <div>
-                  <strong>Assessment sport:</strong> {reportData.results.snapshot.sport}
-                </div>
-              )}
-              {(() => {
-                const patient = resolvePatientSnapshot(reportData)
-                const suffix = patient.fromProfile ? ' (current profile)' : ''
-                return (
-                  <>
-                    <div>
-                      <strong>Weight:</strong> {patient.weightLbs !== null ? `${patient.weightLbs} lbs${suffix}` : 'Not recorded'}
-                    </div>
-                    <div>
-                      <strong>Height:</strong> {patient.heightFt !== null ? `${patient.heightFt} ft${suffix}` : 'Not recorded'}
-                    </div>
-                    <div>
-                      <strong>Somatotype:</strong> {patient.somatotype ? `${translateBodyType(patient.somatotype)}${suffix}` : 'Not recorded'}
-                    </div>
-                    <div>
-                      <strong>Dominant side (declared):</strong>{' '}
-                      {patient.dominantSide ? DOMINANT_SIDE_LABELS[patient.dominantSide] : 'Not declared'}
-                    </div>
-                  </>
-                )
-              })()}
-            </div>
-          </section>
-        )}
-
         {/* Report built only from recorded data and the rules in utils/clinicalScoring.ts */}
+        <ReportPatientCard data={reportData} />
         <ExecutiveSummaryCard data={reportData} />
-        <ResultsOverviewGrid data={reportData} />
-        <MainChartsSection data={reportData} />
-        {/* Sport chosen for this assessment; older assessments fall back to the patient's profile sport */}
-        {(() => {
-          const reportSport = resolvePatientSnapshot(reportData).reportSport
-          return hasSportReport(reportSport) && <SportReportSection sport={reportSport} />
-        })()}
+        <CapacityProfileSection data={reportData} />
+        <KeyGraphsSection data={reportData} />
         <DetailedAnalysisSection data={reportData} />
 
         {analysis.aiAnalysisResults && analysis.aiAnalysisResults.length > 0 && (

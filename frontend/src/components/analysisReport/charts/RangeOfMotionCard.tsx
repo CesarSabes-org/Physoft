@@ -16,6 +16,9 @@ function RomCell({ value, item, colSpan }: {
     return (
         <td colSpan={colSpan}>
             {value}&deg;{' '}
+            {item.referenceDeg !== null && item.referenceDeg > 0 && (
+                <span className="rom-pct">({Math.round((value / item.referenceDeg) * 100)}%)</span>
+            )}{' '}
             {c.level ? <ToneText tone={LEVEL_TONE[c.level]}>{MOBILITY_LEVEL_LABELS[c.level]}</ToneText> : <span className="rom-muted">Pending ref.</span>}
             {c.excessive && <span className="rom-excessive"> · Excessive</span>}
         </td>
@@ -23,7 +26,7 @@ function RomCell({ value, item, colSpan }: {
 }
 
 /** Box 6 — instrumented ROM by movement and side, against the stored reference. */
-function RangeOfMotionCard({ results }: { results: ClinicalResults }) {
+function RangeOfMotionCard({ results, index }: { results: ClinicalResults; index?: number }) {
     const rows = MOBILITY_MOVEMENTS.filter((m) => {
         const item = results.mobility.items[m.id]
         return item.rightDeg !== null || item.leftDeg !== null || item.valueDeg !== null
@@ -31,8 +34,9 @@ function RangeOfMotionCard({ results }: { results: ClinicalResults }) {
 
     return (
         <ReportCard
-            title="6 · Mobility Range"
-            subtitle="By movement and side (R = right, L = left)"
+            title="Range of Motion Analysis"
+            index={index}
+            subtitle="By movement and side · (%) = share of the reference value"
             source={results.mobility.source}
             status={effectiveStatus(results, 'mobility')}
             wide

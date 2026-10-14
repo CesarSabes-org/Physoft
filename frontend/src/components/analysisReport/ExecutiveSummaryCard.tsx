@@ -1,26 +1,22 @@
-import { IoAnalyticsOutline } from 'react-icons/io5'
-import { effectiveStatus, CLINICAL_SECTIONS } from '@/utils/clinicalScoring'
+import { IoAnalyticsOutline, IoArrowUpCircle, IoAlertCircle, IoWarning } from 'react-icons/io5'
 import { TONE_COLORS } from './charts/ReportCard'
-import type { ReportData } from './reportData'
+import { deriveStrengths, evaluationCoverage, type ReportData } from './reportData'
 import './ExecutiveSummaryCard.css'
 
-const MAX_FINDINGS = 6
+const MAX_ITEMS = 6
+const RING_RADIUS = 46
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
 
 /**
- * Executive Summary — documented findings with their source. No global
- * 0-100 score is presented until a justified formula exists, and the
- * cohort comparison is withdrawn.
+ * Executive Summary — evaluation coverage, documented findings and the
+ * results that meet their reference. No global 0-100 score is presented
+ * until the client defines a justified formula.
  */
 function ExecutiveSummaryCard({ data }: { data: ReportData }) {
-    const { results, findings, flexibility } = data
-    const boxes = CLINICAL_SECTIONS.filter((s) => s.box !== null)
-    const evaluatedBoxes = boxes.filter((s) => effectiveStatus(results, s.key) !== 'NOT_EVALUATED').length + (flexibility.ratedCount > 0 ? 1 : 0)
-    const pendingVerification = boxes.filter((s) => effectiveStatus(results, s.key) === 'PENDING_VERIFICATION')
-    const sources = new Set(
-        [flexibility.ratedCount > 0 ? 'Evaluator form' : null, ...boxes.map((s) => (effectiveStatus(results, s.key) !== 'NOT_EVALUATED' ? results[s.key].source : null))]
-            .filter((s): s is string => Boolean(s))
-    )
-    const shown = findings.slice(0, MAX_FINDINGS)
+    const coverage = evaluationCoverage(data)
+    const strengths = deriveStrengths(data)
+    const findings = data.findings
+    const ratio = coverage.total > 0 ? coverage.evaluated / coverage.total : 0
 
     return (
         <section className="analysis-section executive-summary-card">
@@ -28,56 +24,73 @@ function ExecutiveSummaryCard({ data }: { data: ReportData }) {
                 <IoAnalyticsOutline /> Executive Summary
             </h2>
 
-            <div className="executive-summary-body">
-                <div className="executive-summary-text">
-                    {shown.length === 0 ? (
-                        <p>
-                            {evaluatedBoxes === 0
-                                ? 'No results recorded for this evaluation yet.'
-                                : 'No limitations were documented in the evaluated boxes.'}
+            <div className="executive-summary-layout">
+                <div className="executive-summary-coverage">
+                    <svg viewBox="0 0 120 120" className="executive-summary-ring" role="img" aria-label={`${coverage.evaluated} of ${coverage.total} boxes evaluated`}>
+                        <circle cx="60" cy="60" r={RING_RADIUS} fill="none" stroke="var(--report-line, rgba(255, 255, 255, 0.08))" strokeWidth={10} />
+                        <circle
+                            cx="60"
+                            cy="60"
+                            r={RING_RADIUS}
+                            fill="none"
+                            stroke="var(--color-primary, #14b8a6)"
+                            strokeWidth={10}
+                            strokeLinecap="round"
+                            strokeDasharray={`${RING_CIRCUMFERENCE * ratio} ${RING_CIRCUMFERENCE}`}
+                            transform="rotate(-90 60 60)"
+                        />
+                        <text x="60" y="58" textAnchor="middle" fill="var(--color-text-primary, #fff)" fontSize={24} fontWeight={800}>{coverage.evaluated}/{coverage.total}</text>
+                        <text x="60" y="76" textAnchor="middle" fill="var(--color-text-muted, #737373)" fontSize={11} fontWeight={600} letterSpacing="0.08em">boxes</text>
+                    </svg>
+                    <span className="executive-summary-coverage-title">Evaluation coverage</span>
+                    <span className="executive-summary-coverage-note">
+                        {coverage.sources.length} data source{coverage.sources.length === 1 ? '' : 's'}
+                    </span>
+                    {coverage.pendingVerification.length > 0 && (
+                        <span className="executive-summary-coverage-pending">
+                            Pending verification: {coverage.pendingVerification.join(', ')}
+                        </span>
+                    )}
+                    <span className="executive-summary-coverage-note">Global score not presented — requires a justified formula</span>
+                </div>
+
+                <div className="executive-summary-column">
+                    <h3>Areas to address</h3>
+                    {findings.length === 0 ? (
+                        <p className="executive-summary-empty">
+                            {coverage.evaluated === 0 ? 'No results recorded for this evaluation yet.' : 'No limitations documented in the evaluated boxes.'}
                         </p>
                     ) : (
-                        <ul className="executive-summary-findings">
-                            {shown.map((finding, idx) => (
+                        <ul className="executive-summary-list">
+                            {findings.slice(0, MAX_ITEMS).map((finding, idx) => (
                                 <li key={idx}>
-                                    <span
-                                        className="executive-summary-dot"
-                                        style={{ background: finding.level === 'limitation' ? TONE_COLORS.bad : TONE_COLORS.warning }}
-                                    />
-                                    <div>
-                                        <p>{finding.text}</p>
-                                        {finding.source && <span className="executive-summary-source">Source: {finding.source}</span>}
-                                    </div>
+                                    {finding.level === 'limitation'
+                                        ? <IoAlertCircle style={{ color: TONE_COLORS.bad }} />
+                                        : <IoWarning style={{ color: TONE_COLORS.warning }} />}
+                                    <span>{finding.text}</span>
                                 </li>
                             ))}
                         </ul>
                     )}
-                    {findings.length > MAX_FINDINGS && (
-                        <p className="executive-summary-more">+{findings.length - MAX_FINDINGS} more in Detailed Analysis</p>
+                    {findings.length > MAX_ITEMS && (
+                        <p className="executive-summary-more">+{findings.length - MAX_ITEMS} more in Detailed Analysis</p>
                     )}
                 </div>
 
-                <div className="executive-summary-stats">
-                    <div className="executive-summary-stat">
-                        <span className="executive-summary-stat-label">Boxes evaluated</span>
-                        <span className="executive-summary-stat-value">{evaluatedBoxes}/9</span>
-                    </div>
-                    <div className="executive-summary-stat">
-                        <span className="executive-summary-stat-label">Data sources</span>
-                        <span className="executive-summary-stat-value">{sources.size}</span>
-                    </div>
-                    {pendingVerification.length > 0 && (
-                        <div className="executive-summary-stat">
-                            <span className="executive-summary-stat-label">Pending verification</span>
-                            <span className="executive-summary-stat-value" style={{ color: TONE_COLORS.warning }}>
-                                {pendingVerification.map((s) => s.title).join(', ')}
-                            </span>
-                        </div>
+                <div className="executive-summary-column">
+                    <h3>Strengths</h3>
+                    {strengths.length === 0 ? (
+                        <p className="executive-summary-empty">No result meets its reference yet, or references are pending.</p>
+                    ) : (
+                        <ul className="executive-summary-list">
+                            {strengths.slice(0, MAX_ITEMS).map((strength, idx) => (
+                                <li key={idx}>
+                                    <IoArrowUpCircle style={{ color: TONE_COLORS.good }} />
+                                    <span>{strength}</span>
+                                </li>
+                            ))}
+                        </ul>
                     )}
-                    <div className="executive-summary-stat">
-                        <span className="executive-summary-stat-label">Global score</span>
-                        <span className="executive-summary-stat-muted">Not presented — requires a justified formula</span>
-                    </div>
                 </div>
             </div>
         </section>

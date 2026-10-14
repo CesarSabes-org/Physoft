@@ -8,11 +8,11 @@ import './MuscularBalanceCard.css'
  * apparent predominance only: a Good/Poor rating needs a comparable signal
  * and a task criterion.
  */
-function MuscularBalanceCard({ results }: { results: ClinicalResults }) {
+function MuscularBalanceCard({ results, index }: { results: ClinicalResults; index?: number }) {
     const s = results.asymmetry
 
     return (
-        <ReportCard title="7 · Muscle Asymmetry (EMG)" subtitle="Bilateral EMG of the recorded muscles" source={s.source} status={effectiveStatus(results, 'asymmetry')}>
+        <ReportCard title="Muscle Balance (EMG)" index={index} subtitle="Bilateral EMG of the recorded muscles" source={s.source} status={effectiveStatus(results, 'asymmetry')}>
             {s.overall && (
                 <p className="muscular-balance-overall">Overall: <strong>{PREDOMINANCE_LABELS[s.overall]}</strong></p>
             )}

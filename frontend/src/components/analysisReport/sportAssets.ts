@@ -1,10 +1,9 @@
 // ============================================
 // SPORT ASSETS: Sport Report Section
 // ============================================
-// Centralized per-sport maps (illustrations, titles, placeholders, phase
-// labels). No measurement data lives here. Adding a new sport later means
-// adding one entry to each map below -- SportReportSection.tsx itself never
-// needs to change.
+// Centralized per-sport maps (illustrations, placeholders, phase labels).
+// No measurement data lives here. Adding a new sport later means adding one
+// entry to each map below -- InertialForceCard.tsx itself never needs to change.
 // ============================================
 
 import GolfImage from '@/assets/Result_Assessment/Golf.webp'
@@ -66,16 +65,6 @@ export function defaultAssessmentSport(athleteSport?: string | null): string {
     if (!athleteSport) return ''
     if (athleteSport === 'Table Tennis') return 'Ping Pong'
     return ASSESSMENT_SPORTS.find((s) => s.toLowerCase() === athleteSport.trim().toLowerCase()) ?? ''
-}
-
-/**
- * Sport name -> section title override. Any sport without an explicit
- * entry here falls back to a generated `INERTIAL FORCE IN {SPORT}` title
- * (see SportReportSection.tsx), so this map only needs entries when a
- * sport requires different wording than that default.
- */
-export const SPORT_TITLES: Record<string, string> = {
-    Golf: 'INERTIAL FORCE IN GOLF'
 }
 
 /** Sport name -> short placeholder copy shown when no illustrative image exists yet. */

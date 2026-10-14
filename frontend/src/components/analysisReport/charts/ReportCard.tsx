@@ -23,6 +23,8 @@ export function ToneText({ tone, children }: { tone: Tone; children: ReactNode }
 
 interface ReportCardProps {
     title: string
+    /** Position in the Key Graphs section (1-9) */
+    index?: number
     subtitle?: string
     source?: string | null
     status?: ResultStatus
@@ -31,14 +33,17 @@ interface ReportCardProps {
 }
 
 /** Shared wrapper for the report's result cards: title, status tag and source line. */
-function ReportCard({ title, subtitle, source, status, wide, children }: ReportCardProps) {
+function ReportCard({ title, index, subtitle, source, status, wide, children }: ReportCardProps) {
     const notEvaluated = status === 'NOT_EVALUATED'
 
     return (
         <div className={`chart-card ${wide ? 'chart-card-wide' : ''}`}>
             <div className="chart-card-header">
                 <div className="chart-card-title-row">
-                    <h3>{title}</h3>
+                    <h3>
+                        {index !== undefined && <span className="chart-card-index">{index}</span>}
+                        {title}
+                    </h3>
                     {status && <StatusTag status={status} />}
                 </div>
                 {subtitle && <p>{subtitle}</p>}

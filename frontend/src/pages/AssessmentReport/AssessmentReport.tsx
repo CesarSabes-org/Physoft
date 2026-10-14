@@ -3,32 +3,17 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { IoArrowBack, IoDownloadOutline, IoSparklesOutline, IoPrintOutline, IoAlertCircleOutline } from 'react-icons/io5'
 import LoadingSpinner from '@/components/common/feedback/LoadingSpinner'
 import { ButtonLoadingContent } from '@/components/common/feedback/ButtonSpinner'
+import ReportPatientCard from '@/components/analysisReport/ReportPatientCard'
 import ExecutiveSummaryCard from '@/components/analysisReport/ExecutiveSummaryCard'
-import ResultsOverviewGrid from '@/components/analysisReport/ResultsOverviewGrid'
-import MainChartsSection from '@/components/analysisReport/MainChartsSection'
-import SportReportSection from '@/components/analysisReport/SportReportSection'
+import CapacityProfileSection from '@/components/analysisReport/CapacityProfileSection'
+import KeyGraphsSection from '@/components/analysisReport/KeyGraphsSection'
 import DetailedAnalysisSection from '@/components/analysisReport/DetailedAnalysisSection'
-import { hasSportReport } from '@/components/analysisReport/sportAssets'
-import { DOMINANT_SIDE_LABELS, resolvePatientSnapshot } from '@/components/analysisReport/reportData'
 import { CHECKLIST_LABELS } from '@/components/analysis/checklistTypes'
 import { useAssessmentReport } from '@/hooks/useAssessmentReport'
-import { translateBodyType } from '@/utils/translation.utils'
-import { calculateAge, formatBirthDateMMDDYYYY, formatDate } from '@/utils/date.utils'
+import { formatDate } from '@/utils/date.utils'
 import { exportReportPdf } from '@/utils/exportReportPdf'
 import physoftLogo from '@/assets/physoft.png'
 import './AssessmentReport.css'
-
-// Same label as the on-screen report (one shared helper)
-const somatotypeLabel = translateBodyType
-
-function initials(name: string): string {
-    return name
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase())
-        .join('')
-}
 
 /** Safe file name for the browser's "Save as PDF" default. */
 function fileNameFor(name: string, date: string): string {
@@ -99,26 +84,7 @@ function AssessmentReport() {
         )
     }
 
-    const athlete = analysis.athlete
-    const patient = resolvePatientSnapshot(reportData)
-    const age = athlete?.birthDate ? calculateAge(athlete.birthDate) : null
-    const profileNote = patient.fromProfile ? ' *' : ''
     const aiResults = analysis.aiAnalysisResults ?? []
-
-    const patientFields: { label: string; value: string }[] = [
-        { label: 'Patient code', value: athlete?.accessCode ?? '—' },
-        { label: 'Sex', value: athlete?.gender || 'Not recorded' },
-        {
-            label: 'Age',
-            value: age !== null && age > 0 ? `${age} years (${formatBirthDateMMDDYYYY(athlete?.birthDate)})` : 'Not recorded'
-        },
-        { label: 'Sport (profile)', value: athlete?.sport && athlete.sport !== 'None' ? athlete.sport : 'Not an athlete' },
-        { label: 'Assessment sport', value: reportData.results.snapshot.sport ?? 'Not selected' },
-        { label: 'Weight', value: patient.weightLbs !== null ? `${patient.weightLbs} lbs${profileNote}` : 'Not recorded' },
-        { label: 'Height', value: patient.heightFt !== null ? `${patient.heightFt} ft${profileNote}` : 'Not recorded' },
-        { label: 'Somatotype', value: patient.somatotype ? `${somatotypeLabel(patient.somatotype)}${profileNote}` : 'Not recorded' },
-        { label: 'Dominant side (declared)', value: patient.dominantSide ? DOMINANT_SIDE_LABELS[patient.dominantSide] : 'Not declared' }
-    ]
 
     return (
         <div className="report-screen">
@@ -160,38 +126,12 @@ function AssessmentReport() {
                     </dl>
                 </header>
 
-                {/* Patient */}
-                <section className="report-doc-patient">
-                    <div className="report-doc-patient-identity">
-                        {athlete?.photo ? (
-                            <img src={athlete.photo} alt={athlete.name} className="report-doc-avatar" />
-                        ) : (
-                            <span className="report-doc-avatar report-doc-avatar-initials">{initials(athlete?.name ?? 'P')}</span>
-                        )}
-                        <div>
-                            <span className="report-doc-eyebrow">Patient</span>
-                            <h1>{athlete?.name ?? 'Patient'}</h1>
-                        </div>
-                    </div>
-                    <dl className="report-doc-patient-grid">
-                        {patientFields.map((field) => (
-                            <div key={field.label}>
-                                <dt>{field.label}</dt>
-                                <dd>{field.value}</dd>
-                            </div>
-                        ))}
-                    </dl>
-                    {patient.fromProfile && (
-                        <p className="report-doc-footnote">* Not recorded at this evaluation — taken from the current patient profile.</p>
-                    )}
-                </section>
-
                 {/* Report body — the same components as the on-screen report */}
                 <div className="report-doc-body">
+                    <ReportPatientCard data={reportData} />
                     <ExecutiveSummaryCard data={reportData} />
-                    <ResultsOverviewGrid data={reportData} />
-                    <MainChartsSection data={reportData} />
-                    {hasSportReport(patient.reportSport) && <SportReportSection sport={patient.reportSport} />}
+                    <CapacityProfileSection data={reportData} />
+                    <KeyGraphsSection data={reportData} />
                     <DetailedAnalysisSection data={reportData} />
 
                     {aiResults.length > 0 && (

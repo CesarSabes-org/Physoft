@@ -8,9 +8,9 @@ import './CompensationMapCard.css'
  * detected stability difference appear, each with the evidence behind it.
  * Clinical orientation only; not a direct pressure or load map.
  */
-function CompensationMapCard({ regions }: { regions: CompensationRegion[] }) {
+function CompensationMapCard({ regions, index }: { regions: CompensationRegion[]; index?: number }) {
     return (
-        <ReportCard title="Movement Compensation Map" subtitle="Regions with measured limitations or stability differences">
+        <ReportCard title="Load Distribution & Compensations" index={index} subtitle="Regions with measured limitations or stability differences">
             {regions.length === 0 ? (
                 <p className="chart-card-empty">No measured limitations or stability differences recorded</p>
             ) : (

@@ -9,8 +9,10 @@
 import type { Analysis } from '@/services/api'
 import type { ClinicalResults, ClinicalSectionKey, DominantSide, ResultStatus } from '@/types/clinicalResults.types'
 import {
+    CLINICAL_SECTIONS,
     FALL_RISK_LABELS,
     FATIGUE_SUMMARY_LABEL,
+    FLEXIBILITY_EXERCISE_LABELS,
     MOBILITY_MOVEMENTS,
     PREDOMINANCE_LABELS,
     RANGE_POSITION_LABELS,
@@ -24,6 +26,7 @@ import {
     deriveFindings,
     effectiveStatus,
     hydrateClinicalResults,
+    sectionHasData,
     sideDifference,
     type CompensationRegion,
     type Finding,
@@ -367,4 +370,170 @@ export function resolvePatientSnapshot(data: ReportData): PatientSnapshotView {
         reportSport: snapshot.sport ?? athlete?.sport ?? null,
         fromProfile: !hasSnapshot
     }
+}
+
+// --------------------------------------------
+// Completeness of the evaluation
+// --------------------------------------------
+
+export interface EvaluationCoverage {
+    /** Report boxes (1-9) with at least one recorded value */
+    evaluated: number
+    total: number
+    /** Distinct data sources behind the evaluated boxes */
+    sources: string[]
+    /** Boxes filled by AI that still await the evaluator's check */
+    pendingVerification: string[]
+}
+
+export function evaluationCoverage(data: ReportData): EvaluationCoverage {
+    const { results, flexibility } = data
+    const boxes = CLINICAL_SECTIONS.filter((s) => s.box !== null)
+    const evaluatedBoxes = boxes.filter((s) => effectiveStatus(results, s.key) !== 'NOT_EVALUATED')
+    const sources = new Set(
+        [flexibility.ratedCount > 0 ? 'Evaluator form' : null, ...evaluatedBoxes.map((s) => results[s.key].source)]
+            .filter((s): s is string => Boolean(s && s.trim()))
+    )
+    return {
+        evaluated: evaluatedBoxes.length + (flexibility.ratedCount > 0 ? 1 : 0),
+        total: boxes.length + 1,
+        sources: [...sources],
+        pendingVerification: boxes.filter((s) => effectiveStatus(results, s.key) === 'PENDING_VERIFICATION').map((s) => s.title)
+    }
+}
+
+// --------------------------------------------
+// Strengths: the findings' rules, read the other way
+// --------------------------------------------
+
+/**
+ * Results that meet their reference, using the same rules that produce the
+ * findings. Nothing is listed without a classification behind it.
+ */
+export function deriveStrengths(data: ReportData): string[] {
+    const { results, flexibility, gender } = data
+    const strengths: string[] = []
+
+    const excellentTests = flexibility.tests.filter((t) => t.rating === 'HIGH').map((t) => FLEXIBILITY_EXERCISE_LABELS[t.exerciseId])
+    if (excellentTests.length > 0) {
+        strengths.push(`Optimal flexibility (Excellent): ${excellentTests.join(', ')}.`)
+    }
+
+    if (effectiveStatus(results, 'fatigue') === 'EVALUATED' && results.fatigue.rating === 'EXCELLENT') {
+        strengths.push('Good endurance: performance maintained during the fatigue test.')
+    }
+
+    const balance = results.balance
+    const balanceLevels = [balance.rightAreaMm2, balance.leftAreaMm2]
+        .map((area) => classifyBalanceArea(area, balance.referenceP25AreaMm2, balance.referenceP75AreaMm2))
+    if (balanceLevels.every((level) => level === 'EXCELLENT')) {
+        strengths.push('Excellent postural control on both single-leg supports (sway at or below the reference 25th percentile).')
+    }
+
+    const gait = results.gait
+    if (sectionHasData(results, 'gait')) {
+        const speed = classifyRange(gait.speedMs, gait.refSpeedMinMs, gait.refSpeedMaxMs)
+        const cadence = classifyRange(gait.cadenceStepsMin, gait.refCadenceMin, gait.refCadenceMax)
+        if (speed === 'WITHIN' && cadence !== 'BELOW' && cadence !== 'ABOVE') {
+            strengths.push(`Gait speed ${gait.speedMs} m/s within the reference interval${cadence === 'WITHIN' ? ', cadence also within reference' : ''}.`)
+        }
+    }
+
+    if (sectionHasData(results, 'mobility')) {
+        const withinTarget = MOBILITY_MOVEMENTS.filter((m) => {
+            const item = results.mobility.items[m.id]
+            const values = (m.bilateral ? [item.rightDeg, item.leftDeg] : [item.valueDeg]).filter((v): v is number => v !== null)
+            return values.length > 0 && values.every((v) => {
+                const c = classifyRom(v, item)
+                return c.level === 'EXCELLENT' && !c.excessive
+            })
+        }).map((m) => m.label.toLowerCase())
+        if (withinTarget.length > 0) {
+            strengths.push(`Range of motion within the target: ${withinTarget.join(', ')}.`)
+        }
+    }
+
+    if (sectionHasData(results, 'asymmetry') && results.asymmetry.overall === 'BALANCED') {
+        strengths.push('No clear muscle predominance between sides (EMG).')
+    }
+
+    if (results.fallRisk.right === 'LOW' && results.fallRisk.left === 'LOW') {
+        strengths.push('Low fall risk on both supports (device classification).')
+    }
+
+    const composition = results.composition
+    if (sectionHasData(results, 'composition')) {
+        const fatRef = bodyFatReference(gender)
+        const fat = fatRef ? classifyRange(composition.bodyFatPct, fatRef.min, fatRef.max) : null
+        const bmiNormal = classifyBmi(composition.bmi) === 'Normal weight'
+        if (fat === 'WITHIN' && bmiNormal) strengths.push(`Body fat (${composition.bodyFatPct}%) and BMI (${composition.bmi}) within reference.`)
+        else if (fat === 'WITHIN') strengths.push(`Body fat ${composition.bodyFatPct}% within the InBody reference.`)
+        else if (bmiNormal) strengths.push(`BMI ${composition.bmi}: normal weight (WHO category).`)
+    }
+
+    return strengths
+}
+
+// --------------------------------------------
+// Capacity profile (7 cards)
+// --------------------------------------------
+
+export type CapacityKey = 'mobility' | 'explosive' | 'fatigue' | 'balance' | 'fallRisk' | 'asymmetry' | 'composition'
+
+export interface CapacityCard {
+    key: CapacityKey
+    title: string
+    value: string
+    /** Short classification chip; null when there is no rule to rate it */
+    rating: string | null
+    detail: string
+    tone: Tone
+    /** 0-100 only where the client defined a score (Flexibility Score) */
+    score: number | null
+}
+
+const RATING_BY_TONE: Partial<Record<Tone, string>> = {
+    good: 'Good',
+    mid: 'Moderate',
+    bad: 'Limited',
+    warning: 'Review'
+}
+
+/**
+ * The seven capacities of the client's report layout, built from the nine
+ * report boxes. No 0-100 score is invented: only Flexibility has one, and
+ * it is shown without a category because the client defined none.
+ */
+export function buildCapacityProfile(data: ReportData): CapacityCard[] {
+    const boxes = summarizeBoxes(data)
+    const box = (key: BoxSummary['key']) => boxes.find((b) => b.key === key) as BoxSummary
+    const card = (key: CapacityKey, source: BoxSummary, title: string, rating?: string | null): CapacityCard => ({
+        key,
+        title,
+        value: source.value,
+        rating: source.tone === 'muted' ? null : rating !== undefined ? rating : RATING_BY_TONE[source.tone] ?? null,
+        detail: source.detail,
+        tone: source.tone,
+        score: null
+    })
+
+    const flexibility = box('flexibility')
+    const mobility = box('mobility')
+    const fallLevels = [data.results.fallRisk.right, data.results.fallRisk.left]
+    const fallRating = fallLevels.includes('HIGH') ? 'High risk' : fallLevels.includes('MEDIUM') ? 'Medium risk' : fallLevels.includes('LOW') ? 'Low risk' : null
+
+    return [
+        {
+            ...card('mobility', flexibility, 'Mobility / Flexibility', data.flexibility.riskExercises.length > 0 ? 'Review' : null),
+            detail: [flexibility.detail, mobility.status !== 'NOT_EVALUATED' && mobility.detail ? `ROM: ${mobility.detail}` : null]
+                .filter(Boolean).join(' · '),
+            score: data.flexibility.score
+        },
+        card('explosive', box('explosive'), 'Explosive Output', null),
+        card('fatigue', box('fatigue'), 'Fatigue / Resistance'),
+        card('balance', box('balance'), 'Stability & Balance'),
+        card('fallRisk', box('fallRisk'), 'Fall Risk', fallRating),
+        card('asymmetry', box('asymmetry'), 'Muscular Symmetry (EMG)', null),
+        card('composition', box('composition'), 'Body Composition')
+    ]
 }

@@ -72,3 +72,14 @@
     width: 100%;
   }
 }
+
+/* Full-width card: radar beside the test list, with room for the axis labels */
+.chart-card-wide .flex-card-body:not(.flex-card-body-list) {
+  align-items: center;
+  gap: 2.5rem;
+  padding-left: 1.5rem;
+}
+
+.flex-card-body .capacity-radar-chart svg {
+  overflow: visible;
+}
