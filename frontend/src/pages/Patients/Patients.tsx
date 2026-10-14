@@ -24,15 +24,14 @@ function Patients() {
     const location = useLocation()
     // Patient consent must be accepted before opening the Create Patient form.
     const addPatientConsent = useConsentGate(ROUTES.ADD_ATHLETE)
-    const { athletes, loading, fetchAthletes, deleteAthlete } = useAthleteStore()
+    const { athletes, loading, error: athletesError, fetchAthletes, deleteAthlete } = useAthleteStore()
     const { analyses: allAnalyses, fetchAnalyses } = useAnalysisStore()
 
     // Local state
     const [searchTerm, setSearchTerm] = useState('')
     const [sportFilter, setSportFilter] = useState('All')
     const [selectedAthlete, setSelectedAthlete] = useState<AthleteDisplay | null>(null)
-    const [athleteAnalyses, setAthleteAnalyses] = useState<Record<string, Analysis[]>>({})
-    const [error, setError] = useState('')
+    const error = athletesError ? 'Error loading patients. Check your connection and reload the page.' : ''
     const [athleteToDelete, setAthleteToDelete] = useState<string | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
     const [toast, setToast] = useState<{ type: ToastType; message: string } | null>(null)
@@ -52,44 +51,25 @@ function Patients() {
     // Debounce search for better performance
     const debouncedSearch = useDebounce(searchTerm, 300)
 
-    // Fetch athletes and analyses on mount ONLY if store is empty
+    // Always refresh on mount; cached data stays on screen meanwhile
     useEffect(() => {
-        const loadData = async () => {
-            try {
-                if (athletes.length === 0) {
-                    await fetchAthletes()
-                }
-                if (allAnalyses.length === 0) {
-                    await fetchAnalyses()
-                }
-            } catch (err) {
-                console.error('Error loading data:', err)
-                setError('Error loading data')
-            }
-        }
+        fetchAthletes()
+        fetchAnalyses()
+    }, [fetchAthletes, fetchAnalyses])
 
-        loadData()
-    }, []) // Only run once on mount
-
-    // Map analyses to athletes
-    useEffect(() => {
-        if (athletes.length === 0 || allAnalyses.length === 0) return
-
-        const analysesMap: Record<string, Analysis[]> = {}
-        athletes.forEach((athlete: Athlete) => {
-            const athleteAnalysesList = allAnalyses.filter((a: Analysis) => a.athleteId === athlete.id)
-            analysesMap[athlete.id] = athleteAnalysesList.sort((a: Analysis, b: Analysis) =>
-                new Date(b.evaluationDate).getTime() - new Date(a.evaluationDate).getTime()
-            )
+    // Latest assessment per patient (the store keeps analyses newest first)
+    const latestAnalysisByAthlete = useMemo(() => {
+        const map = new Map<string, Analysis>()
+        allAnalyses.forEach((analysis: Analysis) => {
+            if (!map.has(analysis.athleteId)) map.set(analysis.athleteId, analysis)
         })
-
-        setAthleteAnalyses(analysesMap)
-    }, [athletes, allAnalyses])
+        return map
+    }, [allAnalyses])
 
     // Transform athletes for display - memoized to avoid recalculation
     const athletesDisplay = useMemo((): AthleteDisplay[] => {
         return athletes.map((athlete: Athlete) => {
-            const latestAnalysis = athleteAnalyses[athlete.id]?.[0]
+            const latestAnalysis = latestAnalysisByAthlete.get(athlete.id)
 
             return {
                 id: athlete.id,
@@ -112,7 +92,7 @@ function Patients() {
                 }
             }
         })
-    }, [athletes, athleteAnalyses])
+    }, [athletes, latestAnalysisByAthlete])
 
     // Filter athletes - memoized
     const filteredAthletes = useMemo(() => {
@@ -208,7 +188,8 @@ function Patients() {
                         />
                     ))}
                 </div>
-            ) : (
+            ) : error && athletes.length === 0 ? null : (
+                // A failed load is reported above, not shown as "no patients"
                 <EmptyState
                     icon={<IoFootball />}
                     title="No Patients Found"

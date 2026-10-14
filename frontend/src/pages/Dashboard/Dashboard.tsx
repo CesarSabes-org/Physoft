@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useMemo, useEffect } from 'react'
 import PageTemplate from '../../components/templates/PageTemplate'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
 import MetricsOverview from '@/components/dashboard/MetricsOverview'
@@ -16,30 +16,17 @@ const FOLLOW_UP_STALE_DAYS = 30
 const DAY_MS = 24 * 60 * 60 * 1000
 
 function Dashboard() {
-    const { athletes, loading: athletesLoading, fetchAthletes } = useAthleteStore()
-    const { analyses, loading: analysesLoading, fetchAnalyses } = useAnalysisStore()
-    const [error, setError] = useState('')
+    const { athletes, loading: athletesLoading, error: athletesError, fetchAthletes } = useAthleteStore()
+    const { analyses, loading: analysesLoading, error: analysesError, fetchAnalyses } = useAnalysisStore()
 
-    // Fetch athletes and analyses on mount ONLY if store is empty
+    // Always refresh on mount; cached data stays on screen meanwhile
     useEffect(() => {
-        const loadData = async () => {
-            try {
-                if (athletes.length === 0) {
-                    await fetchAthletes()
-                }
-                if (analyses.length === 0) {
-                    await fetchAnalyses()
-                }
-            } catch (err) {
-                console.error('Error loading dashboard data:', err)
-                setError('Error loading dashboard data')
-            }
-        }
-
-        loadData()
-    }, []) // Only run once on mount
+        fetchAthletes()
+        fetchAnalyses()
+    }, [fetchAthletes, fetchAnalyses])
 
     const loading = athletesLoading || analysesLoading
+    const error = athletesError || analysesError ? 'Error loading dashboard data. The figures below may be incomplete.' : ''
 
     const athleteById = useMemo(() => {
         const map = new Map<string, Athlete>()

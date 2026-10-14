@@ -103,6 +103,12 @@ export interface CreateAthleteDTO {
   deviceId?: string
 }
 
+// Optional profile fields accept null to clear them (undefined = leave unchanged)
+type ClearableAthleteField = 'birthDate' | 'nationality' | 'club' | 'position' | 'email' | 'phone'
+export type UpdateAthleteDTO =
+  Partial<Omit<CreateAthleteDTO, 'photo' | ClearableAthleteField>> &
+  { [K in ClearableAthleteField]?: string | null }
+
 export interface AthleteFilters {
   name?: string
   gender?: string
@@ -177,7 +183,7 @@ export const athleteAPI = {
   },
 
   // Update athlete
-  update: async (id: string, athlete: Partial<CreateAthleteDTO>) => {
+  update: async (id: string, athlete: UpdateAthleteDTO) => {
     const response = await apiClient.put<{ success: boolean; data: Athlete; message: string }>(
       `/athletes/${id}`,
       athlete

@@ -58,23 +58,24 @@ function AllAnalyses() {
                 analysisAPI.getAll()
             ])
 
-            // Group analyses by athlete and get the latest one
-            const athleteAnalysisMap = new Map<number, Analysis>()
+            // Group analyses by athlete and keep the latest one. Athlete IDs are
+            // UUID strings: keying by Number(id) would turn every one into NaN
+            // and collapse all patients onto a single assessment.
+            const athleteAnalysisMap = new Map<string, Analysis>()
 
             analysesResponse.data.forEach((analysis) => {
-                const athleteId = Number(analysis.athleteId)
-                const existingAnalysis = athleteAnalysisMap.get(athleteId)
+                const existingAnalysis = athleteAnalysisMap.get(analysis.athleteId)
                 if (!existingAnalysis || new Date(analysis.evaluationDate) > new Date(existingAnalysis.evaluationDate)) {
-                    athleteAnalysisMap.set(athleteId, analysis)
+                    athleteAnalysisMap.set(analysis.athleteId, analysis)
                 }
             })
 
-            // Create combined data structure
+            // Only patients that actually have at least one assessment
             const combined: AthleteWithAnalysis[] = athletesResponse.data
-                .filter(athlete => athleteAnalysisMap.has(Number(athlete.id)))
+                .filter(athlete => athleteAnalysisMap.has(athlete.id))
                 .map(athlete => ({
                     athlete,
-                    latestAnalysis: athleteAnalysisMap.get(Number(athlete.id))!
+                    latestAnalysis: athleteAnalysisMap.get(athlete.id)!
                 }))
 
             setAthletesWithAnalyses(combined)

@@ -58,12 +58,13 @@ No inventarlos; mientras falten, el reporte muestra "Pending reference" o usa el
 
 ## Bugs conocidos
 
-- [ ] All Assessments empareja mal pacientes y evaluaciones (`Number(uuid)`).
-- [ ] El store de Zustand muestra datos desactualizados o sobrescritos en Dashboard y AthleteDetail.
-- [ ] Edit Assessment pierde la hora y puede correr la fecha un día.
-- [ ] Los formularios de edición no permiten vaciar campos.
-- [ ] La vista del reporte en pantalla muestra el somatotipo en español ("Mesomorfo"); el PDF lo muestra en inglés.
-- [ ] En Assessments, la tarjeta "This Week" muestra el total de evaluaciones, no las de la semana (`Analysis.tsx`).
+- [x] All Assessments empareja mal pacientes y evaluaciones (`Number(uuid)`). *Corregido 2026-10-14.*
+- [x] El store de Zustand muestra datos desactualizados o sobrescritos en Dashboard y AthleteDetail. *Corregido 2026-10-14: las páginas siempre refrescan al entrar y AthleteDetail ya no sobrescribe la lista global.*
+- [x] Edit Assessment pierde la hora y puede correr la fecha un día. *Corregido 2026-10-14: fecha y hora en hora local, mismo control que New Assessment.*
+- [x] Los formularios de edición no permiten vaciar campos. *Corregido 2026-10-14 (evaluación y paciente).*
+- [x] La vista del reporte en pantalla muestra el somatotipo en español ("Mesomorfo"); el PDF lo muestra en inglés. *Corregido 2026-10-14: una sola función para pantalla y PDF.*
+- [x] En Assessments, la tarjeta "This Week" muestra el total de evaluaciones, no las de la semana (`Analysis.tsx`). *Corregido 2026-10-14: últimos 7 días, igual que el Dashboard.*
+- [ ] Al guardar Edit Assessment se pierde `evidencePublicId` de las fotos de flexibilidad (el frontend no lo envía). La foto se sigue viendo, pero al borrar la evaluación esa imagen queda huérfana en Cloudinary.
 
 ## Riesgos y deuda técnica
 

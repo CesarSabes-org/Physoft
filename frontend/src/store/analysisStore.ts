@@ -2,55 +2,58 @@ import { create } from 'zustand'
 import { analysisAPI, Analysis } from '../services/api'
 
 interface AnalysisStore {
+    /** Every assessment in the clinic, newest evaluation first */
     analyses: Analysis[]
+    /** True only while nothing has been loaded yet (background refreshes keep showing cached data) */
     loading: boolean
+    loaded: boolean
     error: string | null
 
     // Actions
     fetchAnalyses: () => Promise<void>
-    fetchAnalysesByAthlete: (athleteId: string) => Promise<void>
     addAnalysis: (analysis: Analysis) => void
     updateAnalysis: (id: number, analysis: Analysis) => void
     deleteAnalysis: (id: number) => Promise<void>
-    getAnalysisById: (id: number) => Analysis | undefined
+    removeAnalysesForAthlete: (athleteId: string) => void
 }
 
+const byEvaluationDateDesc = (a: Analysis, b: Analysis) =>
+    new Date(b.evaluationDate).getTime() - new Date(a.evaluationDate).getTime()
+
+/**
+ * Global list of all assessments. It is only ever replaced by a full
+ * fetch (never by a single patient's subset), and pages call
+ * fetchAnalyses() on every mount so data from other sessions/devices
+ * shows up without a full page reload.
+ */
 export const useAnalysisStore = create<AnalysisStore>((set, get) => ({
     analyses: [],
     loading: false,
+    loaded: false,
     error: null,
 
     fetchAnalyses: async () => {
-        set({ loading: true, error: null })
+        set({ loading: !get().loaded, error: null })
         try {
             const response = await analysisAPI.getAll()
-            set({ analyses: response.data, loading: false })
+            set({ analyses: [...response.data].sort(byEvaluationDateDesc), loading: false, loaded: true })
         } catch (error: any) {
-            set({ error: error.message, loading: false })
-        }
-    },
-
-    fetchAnalysesByAthlete: async (athleteId: string) => {
-        set({ loading: true, error: null })
-        try {
-            const response = await analysisAPI.getByAthleteId(athleteId)
-            set({ analyses: response.data, loading: false })
-        } catch (error: any) {
-            set({ error: error.message, loading: false })
+            set({ error: error.response?.data?.error || error.message || 'Error loading assessments', loading: false })
         }
     },
 
     addAnalysis: (analysis: Analysis) => {
         set((state) => ({
-            analyses: [...state.analyses, analysis]
+            analyses: [analysis, ...state.analyses.filter((a) => a.id !== analysis.id)].sort(byEvaluationDateDesc)
         }))
     },
 
     updateAnalysis: (id: number, updatedAnalysis: Analysis) => {
         set((state) => ({
-            analyses: state.analyses.map((a) =>
-                a.id === id ? updatedAnalysis : a
-            )
+            // Merge so fields the update response doesn't include (e.g. athlete photo) are kept
+            analyses: state.analyses
+                .map((a) => (a.id === id ? { ...a, ...updatedAnalysis, athlete: { ...a.athlete, ...updatedAnalysis.athlete } as Analysis['athlete'] } : a))
+                .sort(byEvaluationDateDesc)
         }))
     },
 
@@ -67,7 +70,10 @@ export const useAnalysisStore = create<AnalysisStore>((set, get) => ({
         }
     },
 
-    getAnalysisById: (id: number) => {
-        return get().analyses.find((a) => a.id === id)
+    // Deleting a patient also deletes their assessments on the backend
+    removeAnalysesForAthlete: (athleteId: string) => {
+        set((state) => ({
+            analyses: state.analyses.filter((a) => a.athleteId !== athleteId)
+        }))
     }
 }))

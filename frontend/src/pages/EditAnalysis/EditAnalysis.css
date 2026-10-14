@@ -915,3 +915,15 @@
   gap: 14px;
   margin-top: 1rem;
 }
+/* Evaluation date + time (same layout as New Assessment) */
+.edit-analysis-page .eval-datetime-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.edit-analysis-page .eval-time-input {
+  width: 8.5rem;
+  flex: 0 0 auto;
+}

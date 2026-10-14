@@ -16,6 +16,8 @@ import { WeakPointsList } from '@/components/analysis/WeakPointsList'
 import { PhysicalCapacitiesForm } from '@/components/analysis/PhysicalCapacitiesForm'
 import { AnalysisFieldsForm } from '@/components/analysis/AnalysisFieldsForm'
 import FlexibilityAssessmentSection from '@/components/analysis/FlexibilityAssessmentSection'
+import DateInputMMDDYYYY from '@/components/common/forms/DateInputMMDDYYYY'
+import { localDateTimeToISO, toLocalDateTimeParts } from '@/utils/date.utils'
 import './EditAnalysis.css'
 
 interface PuntoDebil {
@@ -64,7 +66,9 @@ function EditAnalysis() {
     const [athleteGender, setAthleteGender] = useState<string | null>(null)
 
     const [formData, setFormData] = useState({
+        // Local date ('YYYY-MM-DD') and time ('HH:mm') of the evaluation
         fechaEvaluacion: '',
+        horaEvaluacion: '',
         analisisFlexibilidad: '',
         analisisBiobit: '',
         asimetriaMuscular: '',
@@ -121,8 +125,10 @@ function EditAnalysis() {
             setClinicalInitial(analysis.clinicalResults || null)
             setAthleteGender(analysis.athlete?.gender ?? null)
 
+            const evaluationParts = toLocalDateTimeParts(analysis.evaluationDate)
             setFormData({
-                fechaEvaluacion: analysis.evaluationDate ? new Date(analysis.evaluationDate).toISOString().split('T')[0] : '',
+                fechaEvaluacion: evaluationParts.date,
+                horaEvaluacion: evaluationParts.time,
                 analisisFlexibilidad: analysis.flexibilityAnalysis || '',
                 analisisBiobit: analysis.biobitAnalysis || '',
                 asimetriaMuscular: analysis.muscularAsymmetry || '',
@@ -137,7 +143,9 @@ function EditAnalysis() {
                     flexibilidad: analysis.flexibility || 0,
                     velocidad: analysis.speed || 0
                 },
-                clasificacionCohorte: analysis.cohortClassification || analysis.globalClassification || '',
+                // Only the cohort value: seeding from globalClassification ('low'/'medium'/'high')
+                // would save it back into cohortClassification on the next submit
+                clasificacionCohorte: analysis.cohortClassification || '',
                 recomendaciones: analysis.coachRecommendations || ''
             })
         } catch (error) {
@@ -240,41 +248,50 @@ function EditAnalysis() {
         e.preventDefault()
         if (!id) return
 
+        // Local date + time -> ISO, so the stored instant is exactly what the user picked
+        const evaluationDate = localDateTimeToISO(formData.fechaEvaluacion, formData.horaEvaluacion)
+        if (!evaluationDate) {
+            setMensaje({ tipo: 'error', texto: 'Enter a valid evaluation date' })
+            return
+        }
+
         try {
             setSaving(true)
             setMensaje(null)
 
             const updateData: any = {
-                evaluationDate: formData.fechaEvaluacion
+                evaluationDate
             }
 
-            // Análisis textuales
-            if (formData.analisisFlexibilidad) updateData.flexibilityAnalysis = formData.analisisFlexibilidad
-            if (formData.analisisBiobit) updateData.biobitAnalysis = formData.analisisBiobit
-            if (formData.asimetriaMuscular) updateData.muscularAsymmetry = formData.asimetriaMuscular
-            if (formData.controlMotorActivo) updateData.activeMotorControl = formData.controlMotorActivo
-            if (formData.fatigaMuscular) updateData.functionalMuscleFatigue = formData.fatigaMuscular
-            if (formData.controlFuerzaInercia) updateData.inertiaForceControl = formData.controlFuerzaInercia
+            // Every editable field is always sent: an emptied field goes as
+            // null so the backend clears it (omitting it would keep the old value).
+            const textOrNull = (value: string) => (value.trim() === '' ? null : value)
+            const capacityOrNull = (value: number) => (value > 0 ? value : null) // 0 = slider not set
 
-            // Puntos débiles - convertir array a JSON
+            // Análisis textuales
+            updateData.flexibilityAnalysis = textOrNull(formData.analisisFlexibilidad)
+            updateData.biobitAnalysis = textOrNull(formData.analisisBiobit)
+            updateData.muscularAsymmetry = textOrNull(formData.asimetriaMuscular)
+            updateData.activeMotorControl = textOrNull(formData.controlMotorActivo)
+            updateData.functionalMuscleFatigue = textOrNull(formData.fatigaMuscular)
+            updateData.inertiaForceControl = textOrNull(formData.controlFuerzaInercia)
+
+            // Puntos débiles - convertir array a JSON (removing them all clears the field)
             const puntosDebilesTexto = formData.puntosDebiles
                 .filter(p => p.area.trim() !== '')
                 .map(p => ({ area: p.area, descripcion: p.descripcion }))
-
-            if (puntosDebilesTexto.length > 0) {
-                updateData.weakPoints = JSON.stringify(puntosDebilesTexto)
-            }
+            updateData.weakPoints = puntosDebilesTexto.length > 0 ? JSON.stringify(puntosDebilesTexto) : null
 
             // Capacidades físicas
-            if (formData.capacidadesFisicas.potencia > 0) updateData.power = formData.capacidadesFisicas.potencia
-            if (formData.capacidadesFisicas.resistencia > 0) updateData.endurance = formData.capacidadesFisicas.resistencia
-            if (formData.capacidadesFisicas.fuerza > 0) updateData.strength = formData.capacidadesFisicas.fuerza
-            if (formData.capacidadesFisicas.flexibilidad > 0) updateData.flexibility = formData.capacidadesFisicas.flexibilidad
-            if (formData.capacidadesFisicas.velocidad > 0) updateData.speed = formData.capacidadesFisicas.velocidad
+            updateData.power = capacityOrNull(formData.capacidadesFisicas.potencia)
+            updateData.endurance = capacityOrNull(formData.capacidadesFisicas.resistencia)
+            updateData.strength = capacityOrNull(formData.capacidadesFisicas.fuerza)
+            updateData.flexibility = capacityOrNull(formData.capacidadesFisicas.flexibilidad)
+            updateData.speed = capacityOrNull(formData.capacidadesFisicas.velocidad)
 
             // Clasificación y recomendaciones
-            if (formData.clasificacionCohorte) updateData.cohortClassification = formData.clasificacionCohorte
-            if (formData.recomendaciones) updateData.coachRecommendations = formData.recomendaciones
+            updateData.cohortClassification = formData.clasificacionCohorte || null
+            updateData.coachRecommendations = textOrNull(formData.recomendaciones)
 
             // Flexibility Assessment ratings (evidence photos are already
             // persisted immediately via the dedicated endpoint on select/remove)
@@ -346,14 +363,25 @@ function EditAnalysis() {
                 <div className="form-section">
                     <h3>Evaluation Date</h3>
                     <div className="form-group">
-                        <label htmlFor="fechaEvaluacion">Date *</label>
-                        <input
-                            type="date"
-                            id="fechaEvaluacion"
-                            value={formData.fechaEvaluacion}
-                            onChange={(e) => handleChange('fechaEvaluacion', e.target.value)}
-                            required
-                        />
+                        <label htmlFor="fechaEvaluacion">Evaluation Date/Time *</label>
+                        {/* Same MM/DD/YYYY + time control as New Assessment */}
+                        <div className="eval-datetime-row">
+                            <DateInputMMDDYYYY
+                                id="fechaEvaluacion"
+                                value={formData.fechaEvaluacion}
+                                onChange={(isoDate) => handleChange('fechaEvaluacion', isoDate)}
+                                required
+                                disabled={saving}
+                            />
+                            <input
+                                type="time"
+                                value={formData.horaEvaluacion}
+                                onChange={(e) => handleChange('horaEvaluacion', e.target.value)}
+                                aria-label="Evaluation time"
+                                className="eval-time-input"
+                                disabled={saving}
+                            />
+                        </div>
                     </div>
 
                     <AssessmentSportSelect

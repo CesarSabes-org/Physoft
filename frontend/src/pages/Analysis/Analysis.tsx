@@ -1,40 +1,39 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IoSearch, IoFitness, IoTrendingUp, IoDocument } from 'react-icons/io5'
 import PageTemplate from '../../components/templates/PageTemplate'
 import type { Analysis as AnalysisType } from '../../services/api'
-import { useAthleteStore } from '@/store/athleteStore'
 import { useAnalysisStore } from '@/store/analysisStore'
 import { ROUTES } from '../../constants'
-import { useEffect } from 'react'
 import './Analysis.css'
+
+const DAY_MS = 24 * 60 * 60 * 1000
+const RECENT_LIMIT = 5
 
 function Analysis() {
     const navigate = useNavigate()
     const [busqueda, setBusqueda] = useState('')
 
-    const { athletes, loading: loadingAthletes, fetchAthletes } = useAthleteStore()
-    const { analyses, loading: loadingAnalyses, fetchAnalyses } = useAnalysisStore()
+    const { analyses, loading, error, fetchAnalyses } = useAnalysisStore()
 
-    // Fetch data only if stores are empty
+    // Always refresh on mount; cached data stays on screen meanwhile
     useEffect(() => {
-        const loadData = async () => {
-            if (athletes.length === 0) await fetchAthletes()
-            if (analyses.length === 0) await fetchAnalyses()
+        fetchAnalyses()
+    }, [fetchAnalyses])
+
+    // Same definition as the Dashboard: evaluations in the last 7 days
+    const stats = useMemo(() => {
+        const now = Date.now()
+        return {
+            total: analyses.length,
+            thisWeek: analyses.filter((a: AnalysisType) => {
+                const age = now - new Date(a.evaluationDate).getTime()
+                return age >= 0 && age <= 7 * DAY_MS
+            }).length,
+            // Patients with at least one assessment (not every registered patient)
+            athletes: new Set(analyses.map((a: AnalysisType) => a.athleteId)).size
         }
-        loadData()
-    }, [])
-
-    const loading = loadingAnalyses || loadingAthletes
-    // Limit recent analyses to 5
-    const recentAnalyses = analyses.slice(0, 5)
-
-    // Calculate stats from loaded data
-    const stats = {
-        total: analyses.length,
-        thisWeek: analyses.length, // TODO: calcular semana actual
-        athletes: athletes.length
-    }
+    }, [analyses])
 
     const getClassificationBadge = (classification: string | null | undefined) => {
         if (!classification) return 'average'
@@ -50,10 +49,14 @@ function Analysis() {
         return 'Average'
     }
 
-    const filteredAnalyses = recentAnalyses.filter((analysis: AnalysisType) =>
-        analysis.athlete?.name.toLowerCase().includes(busqueda.toLowerCase()) ||
-        analysis.athlete?.accessCode.includes(busqueda)
-    )
+    // Search across every assessment (the store keeps them newest first), then show the latest matches
+    const filteredAnalyses = analyses
+        .filter((analysis: AnalysisType) =>
+            !busqueda ||
+            analysis.athlete?.name.toLowerCase().includes(busqueda.toLowerCase()) ||
+            analysis.athlete?.accessCode.includes(busqueda)
+        )
+        .slice(0, RECENT_LIMIT)
 
     const handleCrearAnalisis = () => {
         navigate(ROUTES.NEW_ANALYSIS)
@@ -125,9 +128,13 @@ function Analysis() {
                     <div style={{ textAlign: 'center', padding: '2rem' }}>
                         <p>Loading analyses...</p>
                     </div>
+                ) : error && analyses.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>
+                        <p>Error loading assessments. Check your connection and reload the page.</p>
+                    </div>
                 ) : filteredAnalyses.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '2rem' }}>
-                        <p>No recent assessments</p>
+                        <p>{busqueda ? 'No assessments match your search' : 'No recent assessments'}</p>
                     </div>
                 ) : (
                     <>

@@ -1,31 +1,38 @@
-/**
- * Translates body type from English to Spanish
- */
-export function translateBodyType(bodyType: string | null | undefined): string {
-    if (!bodyType) return 'No especificado'
+import { BODY_TYPE_LABELS, BODY_TYPES } from '@/constants'
 
-    const translations: Record<string, string> = {
-        'ectomorph': 'Ectomorfo',
-        'mesomorph': 'Mesomorfo',
-        'endomorph': 'Endomorfo'
-    }
-
-    return translations[bodyType.toLowerCase()] || bodyType
+// Older records may hold the Spanish names; map them to the stored English value
+const LEGACY_BODY_TYPES: Record<string, string> = {
+    ectomorfo: BODY_TYPES.ECTOMORPH,
+    mesomorfo: BODY_TYPES.MESOMORPH,
+    endomorfo: BODY_TYPES.ENDOMORPH
 }
 
 /**
- * Translates classification from English to Spanish
+ * Display label for a body type / somatotype, e.g. "Mesomorph (Athletic)".
+ * Single source for every screen and the PDF report, so they always match.
+ */
+export function translateBodyType(bodyType: string | null | undefined): string {
+    if (!bodyType) return 'Not specified'
+
+    const lower = bodyType.trim().toLowerCase()
+    const key = LEGACY_BODY_TYPES[lower] ?? lower.charAt(0).toUpperCase() + lower.slice(1)
+
+    return BODY_TYPE_LABELS[key as keyof typeof BODY_TYPE_LABELS] ?? bodyType
+}
+
+/**
+ * Display label for the global classification (low / medium / high)
  */
 export function translateClassification(classification: string | null | undefined): string {
     if (!classification) return 'N/A'
 
     const translations: Record<string, string> = {
-        'high': 'Encima del Promedio',
-        'medium': 'Promedio',
-        'low': 'Debajo del Promedio'
+        'high': 'Above Average',
+        'medium': 'Average',
+        'low': 'Below Average'
     }
 
-    return translations[classification] || classification
+    return translations[classification.toLowerCase()] || classification
 }
 
 /**
@@ -42,4 +49,3 @@ export function getClassificationBadgeClass(classification: string | null | unde
 
     return classes[classification.toLowerCase()] || 'badge-promedio'
 }
-

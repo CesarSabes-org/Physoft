@@ -12,16 +12,14 @@ import { hasSportReport } from '@/components/analysisReport/sportAssets'
 import { DOMINANT_SIDE_LABELS, resolvePatientSnapshot } from '@/components/analysisReport/reportData'
 import { CHECKLIST_LABELS } from '@/components/analysis/checklistTypes'
 import { useAssessmentReport } from '@/hooks/useAssessmentReport'
-import { BODY_TYPE_LABELS } from '@/constants'
+import { translateBodyType } from '@/utils/translation.utils'
 import { calculateAge, formatBirthDateMMDDYYYY, formatDate } from '@/utils/date.utils'
 import { exportReportPdf } from '@/utils/exportReportPdf'
 import physoftLogo from '@/assets/physoft.png'
 import './AssessmentReport.css'
 
-function somatotypeLabel(value: string): string {
-    const key = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
-    return BODY_TYPE_LABELS[key as keyof typeof BODY_TYPE_LABELS] ?? value
-}
+// Same label as the on-screen report (one shared helper)
+const somatotypeLabel = translateBodyType
 
 function initials(name: string): string {
     return name

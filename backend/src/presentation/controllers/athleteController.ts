@@ -203,22 +203,26 @@ export class AthleteController {
         })
       }
 
+      // Optional fields: undefined = leave unchanged; null or '' = clear
+      const optional = (value: unknown) =>
+        value === undefined ? undefined : (typeof value === 'string' && value.trim() !== '' ? value : null)
+
       const updatedAthlete = await prisma.athlete.update({
         where: { id },
         data: {
           ...(name && { name }),
-          ...(patientType !== undefined && { patientType }),
+          ...(patientType && { patientType }),
           ...(gender && { gender }),
-          ...(birthDate !== undefined && { birthDate }),
-          ...(nationality !== undefined && { nationality }),
+          ...(birthDate !== undefined && { birthDate: optional(birthDate) }),
+          ...(nationality !== undefined && { nationality: optional(nationality) }),
           ...(sport && { sport }),
-          ...(club !== undefined && { club }),
-          ...(position !== undefined && { position }),
+          ...(club !== undefined && { club: optional(club) }),
+          ...(position !== undefined && { position: optional(position) }),
           ...(bodyType && { bodyType }),
           ...(height && { height: parseFloat(height) }),
           ...(weight && { weight: parseFloat(weight) }),
-          ...(email !== undefined && { email }),
-          ...(phone !== undefined && { phone }),
+          ...(email !== undefined && { email: optional(email) }),
+          ...(phone !== undefined && { phone: optional(phone) }),
         },
       })
 

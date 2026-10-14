@@ -3,9 +3,7 @@ import PageTemplate from '../../components/templates/PageTemplate'
 import { BreadcrumbItem } from '../../components/Breadcrumb'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { athleteAPI, Athlete, Analysis } from '../../services/api'
-import { useAthleteStore } from '@/store/athleteStore'
-import { useAnalysisStore } from '@/store/analysisStore'
+import { athleteAPI, analysisAPI, Athlete, Analysis } from '../../services/api'
 import { usePentagonChart, usePentagonGuideLines, usePentagonRadialLines } from '../../hooks/usePentagonChart'
 import { calculateAge, formatBirthDateMMDDYYYY } from '../../utils/date.utils'
 import { translateBodyType, translateClassification, getClassificationBadgeClass } from '../../utils/translation.utils'
@@ -17,9 +15,6 @@ function AthleteDetail() {
     const navigate = useNavigate()
     const { id } = useParams<{ id: string }>()
 
-    const { athletes, fetchAthletes, getAthleteById } = useAthleteStore()
-    const { analyses: allAnalyses, fetchAnalysesByAthlete } = useAnalysisStore()
-
     const [athlete, setAthlete] = useState<Athlete | null>(null)
     const [analyses, setAnalyses] = useState<Analysis[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -30,55 +25,43 @@ function AthleteDetail() {
         window.scrollTo(0, 0)
     }, [])
 
+    // Patient and their assessments always come straight from the API into
+    // local state: the global store holds the clinic-wide lists and must never
+    // be overwritten with one patient's subset.
     useEffect(() => {
-        if (id) {
-            loadAthleteData(id)
+        if (!id) return
+        let cancelled = false
+
+        const loadAthleteData = async () => {
+            try {
+                setIsLoading(true)
+                setError('')
+
+                const [athleteResponse, analysesResponse] = await Promise.all([
+                    athleteAPI.getById(id),
+                    analysisAPI.getByAthleteId(id)
+                ])
+                if (cancelled) return
+
+                setAthlete(athleteResponse.data)
+                setAnalyses([...analysesResponse.data].sort((a: Analysis, b: Analysis) =>
+                    new Date(b.evaluationDate).getTime() - new Date(a.evaluationDate).getTime()
+                ))
+            } catch (err: any) {
+                if (cancelled) return
+                console.error('Error loading athlete data:', err)
+                setAthlete(null)
+                setError(err.response?.status === 404 ? 'Patient not found' : 'Error loading patient data')
+            } finally {
+                if (!cancelled) setIsLoading(false)
+            }
+        }
+
+        loadAthleteData()
+        return () => {
+            cancelled = true
         }
     }, [id])
-
-    const loadAthleteData = async (athleteId: string) => {
-        try {
-            setIsLoading(true)
-            setError('')
-
-            // Try to get from store first
-            let athleteData = getAthleteById(athleteId)
-
-            // If not in store, fetch all athletes ONLY if store is empty
-            if (!athleteData && athletes.length === 0) {
-                await fetchAthletes()
-                athleteData = getAthleteById(athleteId)
-            } else if (!athleteData) {
-                // Store has data but not this athlete, fetch directly
-                const athleteResponse = await athleteAPI.getById(athleteId)
-                athleteData = athleteResponse.data
-            }
-
-            if (!athleteData) {
-                setError('Patient not found')
-                setIsLoading(false)
-                return
-            }
-
-            setAthlete(athleteData)
-
-            // Fetch analyses for this athlete ONLY if not in store
-            const existingAnalyses = allAnalyses.filter((a: Analysis) => a.athleteId === athleteId)
-            if (existingAnalyses.length === 0) {
-                await fetchAnalysesByAthlete(athleteId)
-            }
-
-            const athleteAnalyses = allAnalyses.filter((a: Analysis) => a.athleteId === athleteId)
-            setAnalyses(athleteAnalyses.sort((a: Analysis, b: Analysis) =>
-                new Date(b.evaluationDate).getTime() - new Date(a.evaluationDate).getTime()
-            ))
-        } catch (err) {
-            console.error('Error loading athlete data:', err)
-            setError('Error loading patient data')
-        } finally {
-            setIsLoading(false)
-        }
-    }
 
     // Calculate latest capacities from most recent analysis (before early returns for hooks)
     const latestAnalysis = analyses[0]

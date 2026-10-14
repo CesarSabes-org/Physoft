@@ -418,9 +418,11 @@ export class AnalysisController {
         })
       }
 
-      // Validate physical capacities
+      // Validate physical capacities. Explicit null / '' clears the value
+      // (only undefined means "not sent, leave unchanged").
       const validateCapacity = (value: any, name: string) => {
-        if (value !== undefined && value !== null) {
+        if (value === null || value === '') return null
+        if (value !== undefined) {
           const num = parseInt(value)
           if (isNaN(num) || num < 0 || num > 100) {
             throw new Error(`${name} must be between 0 and 100`)

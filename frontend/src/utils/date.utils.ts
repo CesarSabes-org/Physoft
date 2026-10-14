@@ -78,3 +78,30 @@ export function getRelativeTime(date: string | Date | null | undefined): string 
   if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`
   return `${Math.floor(diffDays / 365)} years ago`
 }
+
+/**
+ * Splits a stored timestamp into the user's LOCAL date ('YYYY-MM-DD') and
+ * time ('HH:mm') for date/time inputs. Using toISOString() here instead
+ * would give the UTC date, which is a day off for evening evaluations in
+ * negative-UTC-offset timezones.
+ */
+export function toLocalDateTimeParts(value: string | Date | null | undefined): { date: string; time: string } {
+  if (!value) return { date: '', time: '' }
+  const d = new Date(value)
+  if (isNaN(d.getTime())) return { date: '', time: '' }
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return {
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`
+  }
+}
+
+/**
+ * Combines a LOCAL date ('YYYY-MM-DD') and time ('HH:mm') into an ISO
+ * timestamp. Returns null for an incomplete or invalid date.
+ */
+export function localDateTimeToISO(date: string, time: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null
+  const d = new Date(`${date}T${/^\d{2}:\d{2}$/.test(time) ? time : '00:00'}`)
+  return isNaN(d.getTime()) ? null : d.toISOString()
+}

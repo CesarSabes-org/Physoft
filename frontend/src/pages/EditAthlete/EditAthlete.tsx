@@ -5,7 +5,7 @@ import PageTemplate from '@/components/templates/PageTemplate'
 import LoadingSpinner from '@/components/common/feedback/LoadingSpinner'
 import { ButtonLoadingContent } from '@/components/common/feedback/ButtonSpinner'
 import DateInputMMDDYYYY from '@/components/common/forms/DateInputMMDDYYYY'
-import { athleteAPI } from '@/services/api'
+import { athleteAPI, type UpdateAthleteDTO } from '@/services/api'
 import { useAthleteStore } from '@/store/athleteStore'
 import { ROUTES, VALIDATION } from '@/constants'
 import './EditAthlete.css'
@@ -135,21 +135,22 @@ function EditAthlete() {
             setSaving(true)
             setMensaje(null)
 
-            // Update basic data
-            const updateData = {
+            // Update basic data. Optional fields go as null when emptied so the
+            // backend clears them (undefined is dropped from the JSON body and
+            // would keep the old value — e.g. club/position after "None").
+            const updateData: UpdateAthleteDTO = {
                 name: formData.name,
                 gender: normalizeGender(formData.gender),
-                birthDate: formData.birthDate || undefined,
-                nationality: formData.nationality || undefined,
+                birthDate: formData.birthDate || null,
+                nationality: formData.nationality.trim() || null,
                 sport: formData.sport,
-                club: formData.club || undefined,
-                position: formData.position || undefined,
+                club: formData.club.trim() || null,
+                position: formData.position.trim() || null,
                 bodyType: normalizeBodyType(formData.bodyType),
                 height: parseFloat(formData.height),
                 weight: parseFloat(formData.weight),
-                email: formData.email || undefined,
-                phone: formData.phone || undefined
-                ,
+                email: formData.email.trim() || null,
+                phone: formData.phone.trim() || null,
                 patientType: formData.patientType || undefined
             }
 
