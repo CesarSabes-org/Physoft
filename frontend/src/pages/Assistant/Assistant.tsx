@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { IoSparkles, IoAnalyticsOutline, IoBulbOutline, IoLayersOutline, IoTrendingUpOutline, IoSend, IoAdd, IoStop, IoRefreshOutline, IoArrowDown, IoTrashOutline, IoCheckmark, IoArrowBack, IoChatbubblesOutline, IoClose } from 'react-icons/io5'
 import ChatMessage from '../../components/assistant/ChatMessage'
+import assistantImage from '@/assets/ClinicalAssistant/IA.webp'
 import { useAssistantChat } from '../../hooks/useAssistantChat'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { useAuth } from '../../hooks/useAuth'
@@ -81,11 +82,8 @@ function Assistant() {
                 <IoArrowBack aria-hidden="true" /> <span>Back</span>
             </button>
             <div className="assistant-topbar-brand">
-                <span className="assistant-topbar-icon" aria-hidden="true"><IoSparkles /></span>
-                <div>
-                    <h1>Clinical Assistant</h1>
-                    <p>A little clarity. A better next step.</p>
-                </div>
+                <h1>Clinical Assistant</h1>
+                <p>A little clarity. A better next step.</p>
             </div>
             <div className="assistant-topbar-actions">
                 <button type="button" className="assistant-history-toggle" aria-expanded={historyOpen} aria-controls="assistant-history"
@@ -121,7 +119,7 @@ function Assistant() {
             <main className="assistant-main">
             <section className={`assistant ${hasMessages ? 'assistant--conversation' : ''}`} aria-label="Physoft assistant">
                 {!hasMessages && !chat.isLoading && <div className="assistant-hero">
-                    <div className="assistant-hero-icon"><IoSparkles aria-hidden="true" /></div>
+                    <img src={assistantImage} alt="" className="assistant-hero-image" width={88} height={88} />
                     <p className="assistant-eyebrow">YOUR PARTNER IN MOVEMENT SCIENCE</p>
                     <h2>What would you like to understand?</h2>
                     <p>Choose a focus, or simply ask. We’ll bring the expertise<br className="assistant-desktop-break" /> so you can get straight to the question.</p>

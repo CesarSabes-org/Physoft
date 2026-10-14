@@ -8,9 +8,9 @@ import {
     IoDocumentTextOutline,
     IoLayersOutline,
     IoSettingsOutline,
-    IoPersonOutline,
-    IoSparkles
+    IoPersonOutline
 } from 'react-icons/io5'
+import assistantImage from '@/assets/ClinicalAssistant/IA.webp'
 import physoftLogo from '@/assets/physoft.png'
 import { ROUTES } from '../constants'
 import '../styles/Sidebar.css'
@@ -83,7 +83,7 @@ function Sidebar() {
                 title="Clinical Assistant"
             >
                 <span className="sidebar-ai-icon">
-                    <IoSparkles />
+                    <img src={assistantImage} alt="" />
                 </span>
                 <span className="sidebar-ai-text">
                     <span className="sidebar-ai-title">Clinical Assistant</span>
