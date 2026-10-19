@@ -1,6 +1,6 @@
 {
   "name": "physoft-backend",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "description": "Backend API de Physoft - Plataforma de análisis deportivo",
   "main": "dist/index.js",
   "scripts": {

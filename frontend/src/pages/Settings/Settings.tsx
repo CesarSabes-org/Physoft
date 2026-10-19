@@ -168,7 +168,7 @@ function Settings() {
                         <div className="config-option">
                             <div className="option-info">
                                 <p className="option-title">Physoft Version</p>
-                                <p className="option-description">1.0.0 Beta</p>
+                                <p className="option-description">{__APP_VERSION__} Beta</p>
                             </div>
                         </div>
                     </div>
