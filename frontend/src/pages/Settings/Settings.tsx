@@ -148,12 +148,11 @@ function Settings() {
                         <div className="config-option">
                             <div className="option-info">
                                 <p className="option-title">Language</p>
-                                <p className="option-description">Select your preferred language</p>
+                                <p className="option-description">Currently active (default). More languages coming soon</p>
                             </div>
-                            <select className="config-select">
-                                <option value="es">Español</option>
+                            {/* Locked like the theme toggle until the UI is translated */}
+                            <select className="config-select" value="en" disabled aria-label="Language">
                                 <option value="en">English</option>
-                                <option value="pt">Português</option>
                             </select>
                         </div>
                     </div>
