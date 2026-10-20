@@ -17,7 +17,6 @@ const UNBREAKABLE_SELECTORS = [
     '.chart-card',
     '.chart-card-subsection',
     '.detailed-analysis-column',
-    '.report-doc-ai-item',
     '.rom-table tr',
     '.report-doc-footer'
 ].join(',')

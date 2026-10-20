@@ -243,21 +243,6 @@ export function getPhotoUrl(photo: string | null | undefined): string {
 // ANALYSIS API
 // ============================================
 
-// Textual Analysis checkbox types (New Assessment, Section 2)
-export type ChecklistType = 'biobit' | 'asymmetry' | 'inertialForce' | 'free'
-
-export interface AIAnalysisResult {
-  id: string
-  checkboxType: ChecklistType
-  userPrompt: string | null
-  uploadedFiles: string[]
-  aiResponse: string
-  tokensUsed?: number
-  createdAt: string
-  edited?: boolean
-  editedAt?: string
-}
-
 // Flexibility Assessment (New Assessment, Section 2 - 4 standardized tests)
 export const FLEXIBILITY_EXERCISE_IDS = ['forwardFlexion', 'shoulderMobility', 'butterfly', 'deepSquat'] as const
 export type FlexibilityExerciseId = typeof FLEXIBILITY_EXERCISE_IDS[number]
@@ -277,12 +262,6 @@ export interface Analysis {
   athleteId: string
   evaluationDate: string
   graphImages?: string | null  // JSON array of URLs
-  flexibilityAnalysis?: string | null
-  biobitAnalysis?: string | null
-  muscularAsymmetry?: string | null
-  activeMotorControl?: string | null
-  functionalMuscleFatigue?: string | null
-  inertiaForceControl?: string | null
   weakPoints?: string | null  // JSON array of strings
   power?: number | null
   endurance?: number | null
@@ -292,7 +271,6 @@ export interface Analysis {
   globalClassification?: string | null  // "low", "medium", "high" - Calculated by comparing with same sport/bodyType
   cohortClassification?: string | null  // "ELITE", "AVANZADO", "INTERMEDIO", "PRINCIPIANTE", "ATENCION_REQUERIDA"
   coachRecommendations?: string | null
-  aiAnalysisResults?: AIAnalysisResult[] | null  // Textual Analysis AI results (native JSON column)
   flexibilityAssessment?: FlexibilityAssessmentResult[] | null  // Flexibility Assessment ratings + evidence (native JSON column)
   clinicalResults?: ClinicalResults | null  // Measured/observed results for report boxes 2-9 (native JSON column)
   createdAt: string
@@ -314,12 +292,6 @@ export interface Analysis {
 export interface CreateAnalysisDTO {
   athleteId: string
   evaluationDate: string
-  flexibilityAnalysis?: string
-  biobitAnalysis?: string
-  muscularAsymmetry?: string
-  activeMotorControl?: string
-  functionalMuscleFatigue?: string
-  inertiaForceControl?: string
   weakPoints?: string  // JSON stringified array
   power?: number
   endurance?: number
@@ -329,7 +301,6 @@ export interface CreateAnalysisDTO {
   globalClassification?: string
   coachRecommendations?: string
   graphs?: File[]  // Graph images to upload
-  aiAnalysisResults?: AIAnalysisResult[]
   // Flexibility Assessment: ratings for the exercises the user touched (create
   // and rating-only update), plus, on create only, the evidence photo picked
   // locally for each exercise (keyed by exerciseId).
@@ -379,12 +350,6 @@ export const analysisAPI = {
     formData.append('evaluationDate', analysis.evaluationDate)
 
     // Append optional textual analyses
-    if (analysis.flexibilityAnalysis) formData.append('flexibilityAnalysis', analysis.flexibilityAnalysis)
-    if (analysis.biobitAnalysis) formData.append('biobitAnalysis', analysis.biobitAnalysis)
-    if (analysis.muscularAsymmetry) formData.append('muscularAsymmetry', analysis.muscularAsymmetry)
-    if (analysis.activeMotorControl) formData.append('activeMotorControl', analysis.activeMotorControl)
-    if (analysis.functionalMuscleFatigue) formData.append('functionalMuscleFatigue', analysis.functionalMuscleFatigue)
-    if (analysis.inertiaForceControl) formData.append('inertiaForceControl', analysis.inertiaForceControl)
 
     // Append weak points as JSON string
     if (analysis.weakPoints) formData.append('weakPoints', analysis.weakPoints)
@@ -405,11 +370,6 @@ export const analysisAPI = {
       analysis.graphs.forEach((file) => {
         formData.append('graphs', file)
       })
-    }
-
-    // Append Textual Analysis AI results (native Json column on the backend)
-    if (analysis.aiAnalysisResults && analysis.aiAnalysisResults.length > 0) {
-      formData.append('aiAnalysisResults', JSON.stringify(analysis.aiAnalysisResults))
     }
 
     // Append Flexibility Assessment ratings (native Json column) and, per
@@ -490,77 +450,10 @@ export const analysisAPI = {
 }
 
 // ============================================
-// CLAUDE API (Textual Analysis)
+// CLAUDE API (AI autocomplete of measured results)
 // ============================================
 
-export interface AnalyzeAssessmentParams {
-  checkboxType: ChecklistType
-  userPrompt?: string
-  patientContext?: {
-    name?: string
-    age?: number
-    sport?: string
-    previousAssessmentsSummary?: string
-  }
-  assessmentId?: number
-  patientId: string
-  files: File[]
-  // Richer clinical context (New Assessment form state — not yet persisted,
-  // so it can't be looked up server-side by patientId alone). Backend still
-  // does all the prompt construction; these are just raw data passthrough.
-  evaluationDate?: string
-  // Physiotherapist's free-text clinical notes / detected conditions for the
-  // current evaluation. Sent with every Textual Analysis request regardless
-  // of which analysis type is selected.
-  clinicalNotes?: string
-}
-
-export interface AnalyzeAssessmentResponse {
-  success: boolean
-  data?: {
-    checkboxType: ChecklistType
-    aiResponse: string
-    tokensUsed: number
-    uploadedFiles: string[]
-  }
-  error?: string
-  message?: string
-}
-
 export const claudeAPI = {
-  // Generate an AI analysis for one Textual Analysis checkbox
-  analyzeAssessment: async (params: AnalyzeAssessmentParams): Promise<AnalyzeAssessmentResponse> => {
-    const formData = new FormData()
-
-    formData.append('checkboxType', params.checkboxType)
-    if (params.userPrompt) formData.append('userPrompt', params.userPrompt)
-    if (params.patientContext) formData.append('patientContext', JSON.stringify(params.patientContext))
-    if (params.assessmentId !== undefined) formData.append('assessmentId', String(params.assessmentId))
-    formData.append('patientId', params.patientId)
-    params.files.forEach((file) => formData.append('files', file))
-
-    if (params.evaluationDate) formData.append('evaluationDate', params.evaluationDate)
-    if (params.clinicalNotes && params.clinicalNotes.trim().length > 0) {
-      formData.append('clinicalNotes', params.clinicalNotes.trim())
-    }
-
-    try {
-      const response = await apiClient.post<AnalyzeAssessmentResponse>(
-        '/claude/analyze-assessment',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      )
-      return response.data
-    } catch (error: any) {
-      const message = error.response?.data?.error || error.message || 'Error generating AI analysis'
-      return { success: false, error: message }
-    }
-  },
-
   // Suggest values for the measured results from device reports (BTS, InBody, EMG).
   // Nothing is saved — the evaluator reviews the suggestions in the form.
   extractClinicalResults: async (files: File[]): Promise<{ success: boolean; data?: ClinicalExtractionResult; error?: string }> => {

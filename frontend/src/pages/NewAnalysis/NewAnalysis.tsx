@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { IoSearch } from 'react-icons/io5'
 import PageTemplate from '@/components/templates/PageTemplate'
 import { ButtonLoadingContent } from '@/components/common/feedback/ButtonSpinner'
-import { athleteAPI, analysisAPI, Athlete, AIAnalysisResult } from '@/services/api'
+import { athleteAPI, analysisAPI, Athlete } from '@/services/api'
 import { useAnalysisStore } from '@/store/analysisStore'
 import { useAthleteStore } from '@/store/athleteStore'
 import DateInputMMDDYYYY from '@/components/common/forms/DateInputMMDDYYYY'
-import TextualAnalysisSection from '@/components/analysis/TextualAnalysisSection'
 import FlexibilityAssessmentSection from '@/components/analysis/FlexibilityAssessmentSection'
 import ClinicalResultsSection from '@/components/analysis/clinicalResults/ClinicalResultsSection'
 import AssessmentSportSelect from '@/components/analysis/AssessmentSportSelect'
@@ -16,7 +15,6 @@ import { useClinicalResultsForm, useFlexibilityAssessmentForm } from '@/hooks'
 import type { DominantSide } from '@/types/clinicalResults.types'
 import { FLEXIBILITY_EXERCISE_IDS } from '@/services/api'
 import { BODY_TYPES, BODY_TYPE_LABELS, VALIDATION } from '@/constants'
-import { calculateAge } from '@/utils/date.utils'
 import './NewAnalysis.css'
 
 function NewAnalysis() {
@@ -30,9 +28,6 @@ function NewAnalysis() {
   const { addAnalysis } = useAnalysisStore()
   const { updateAthlete: updateAthleteInStore } = useAthleteStore()
 
-  // Textual Analysis (AI) results, reported up from TextualAnalysisSection
-  const [aiAnalysisResults, setAiAnalysisResults] = useState<AIAnalysisResult[]>([])
-  const [isAiGenerating, setIsAiGenerating] = useState(false)
 
   // Flexibility Assessment ratings + evidence photos (uploaded on submit, together with the rest of the analysis)
   const flexibilityForm = useFlexibilityAssessmentForm()
@@ -149,11 +144,6 @@ function NewAnalysis() {
       const submitData: any = {
         athleteId: formData.athleteId,
         evaluationDate: new Date(formData.fechaEvaluacion).toISOString(),
-      }
-
-      // Textual Analysis AI results (per-checkbox prompt + response history)
-      if (aiAnalysisResults.length > 0) {
-        submitData.aiAnalysisResults = aiAnalysisResults
       }
 
       // Recommendations for coach
@@ -431,34 +421,10 @@ function NewAnalysis() {
             <ClinicalResultsSection form={clinicalForm} gender={selectedAthlete?.gender} disabled={guardando} />
           </div>
 
-          {/* SECTION 4 - Textual Analysis with AI */}
+          {/* SECTION 4 - Conclusions and Plan */}
           <div className="form-section">
             <h3 className="section-title">
               <span className="section-number">4</span>
-              Textual Analysis
-            </h3>
-            <p className="section-description">
-              Select one or more analysis types, attach supporting files (PDF or images),
-              and optionally add a prompt to focus the AI on specific aspects.
-            </p>
-
-            <TextualAnalysisSection
-              patientId={selectedAthlete?.id}
-              patientContext={{
-                name: selectedAthlete?.name,
-                age: selectedAthlete?.birthDate ? calculateAge(selectedAthlete.birthDate) : undefined,
-                sport: selectedAthlete?.sport
-              }}
-              onResultsChange={setAiAnalysisResults}
-              onGeneratingChange={setIsAiGenerating}
-              evaluationDate={formData.fechaEvaluacion}
-            />
-          </div>
-
-          {/* SECTION 5 - Conclusions and Plan */}
-          <div className="form-section">
-            <h3 className="section-title">
-              <span className="section-number">5</span>
               Conclusions and plan
             </h3>
 
@@ -488,10 +454,9 @@ function NewAnalysis() {
             <button
               type="submit"
               className="btn-primary-large"
-              disabled={guardando || isAiGenerating}
-              title={isAiGenerating ? 'Wait for AI analysis to finish before saving' : undefined}
+              disabled={guardando}
             >
-              {guardando ? <ButtonLoadingContent text="Saving..." /> : isAiGenerating ? 'Waiting for AI...' : '✓ Save Analysis'}
+              {guardando ? <ButtonLoadingContent text="Saving..." /> : '✓ Save Analysis'}
             </button>
           </div>
         </form>

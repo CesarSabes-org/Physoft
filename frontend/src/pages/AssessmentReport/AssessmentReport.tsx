@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { IoArrowBack, IoDownloadOutline, IoSparklesOutline, IoPrintOutline, IoAlertCircleOutline } from 'react-icons/io5'
+import { IoArrowBack, IoDownloadOutline, IoPrintOutline, IoAlertCircleOutline } from 'react-icons/io5'
 import LoadingSpinner from '@/components/common/feedback/LoadingSpinner'
 import { ButtonLoadingContent } from '@/components/common/feedback/ButtonSpinner'
 import ReportPatientCard from '@/components/analysisReport/ReportPatientCard'
@@ -8,7 +8,6 @@ import ExecutiveSummaryCard from '@/components/analysisReport/ExecutiveSummaryCa
 import CapacityProfileSection from '@/components/analysisReport/CapacityProfileSection'
 import KeyGraphsSection from '@/components/analysisReport/KeyGraphsSection'
 import DetailedAnalysisSection from '@/components/analysisReport/DetailedAnalysisSection'
-import { CHECKLIST_LABELS } from '@/components/analysis/checklistTypes'
 import { useAssessmentReport } from '@/hooks/useAssessmentReport'
 import { formatDate } from '@/utils/date.utils'
 import { exportReportPdf } from '@/utils/exportReportPdf'
@@ -84,8 +83,6 @@ function AssessmentReport() {
         )
     }
 
-    const aiResults = analysis.aiAnalysisResults ?? []
-
     return (
         <div className="report-screen">
             {/* Toolbar — screen only */}
@@ -133,23 +130,6 @@ function AssessmentReport() {
                     <CapacityProfileSection data={reportData} />
                     <KeyGraphsSection data={reportData} />
                     <DetailedAnalysisSection data={reportData} />
-
-                    {aiResults.length > 0 && (
-                        <section className="analysis-section report-doc-ai">
-                            <h2>
-                                <IoSparklesOutline /> AI-Assisted Textual Analysis
-                            </h2>
-                            <p className="analysis-section-note">
-                                AI-generated explanations of the attached data, reviewed by the professional. Kept separate from the measured results above.
-                            </p>
-                            {aiResults.map((result) => (
-                                <div key={result.id} className="report-doc-ai-item">
-                                    <h3>{CHECKLIST_LABELS[result.checkboxType] ?? 'Textual Analysis'}</h3>
-                                    <p>{result.aiResponse}</p>
-                                </div>
-                            ))}
-                        </section>
-                    )}
                 </div>
 
                 {/* Closing */}

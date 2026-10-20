@@ -7,7 +7,6 @@ export { useOnlineStatus } from './useOnlineStatus'
 export { usePagination } from './usePagination'
 export { usePentagonChart, usePentagonGuideLines, usePentagonRadialLines } from './usePentagonChart'
 export { useSort } from './useSort'
-export { useAIAnalysisResults } from './useAIAnalysisResults'
 export { useFlexibilityAssessmentForm, getEvidencePreviewSrc } from './useFlexibilityAssessmentForm'
 export { useClinicalResultsForm } from './useClinicalResultsForm'
 

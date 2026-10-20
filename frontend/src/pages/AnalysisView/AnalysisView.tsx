@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { IoTrash, IoCreate, IoSparklesOutline, IoDocumentTextOutline } from 'react-icons/io5'
+import { IoTrash, IoCreate, IoDocumentTextOutline } from 'react-icons/io5'
 import PageTemplate from '../../components/templates/PageTemplate'
 import LoadingSpinner from '@/components/common/feedback/LoadingSpinner'
 import { ButtonLoadingContent } from '@/components/common/feedback/ButtonSpinner'
-import MiniChatPanel from '@/components/analysis/MiniChatPanel'
 import { useAnalysisStore } from '@/store/analysisStore'
 import { MESSAGES } from '@/constants'
 import ReportPatientCard from '@/components/analysisReport/ReportPatientCard'
@@ -130,22 +129,6 @@ function AnalysisView() {
         <CapacityProfileSection data={reportData} />
         <KeyGraphsSection data={reportData} />
         <DetailedAnalysisSection data={reportData} />
-
-        {analysis.aiAnalysisResults && analysis.aiAnalysisResults.length > 0 && (
-          <section className="analysis-section">
-            <h2>
-              <IoSparklesOutline /> AI-Assisted Textual Analysis
-            </h2>
-            <p className="analysis-section-note">
-              AI-generated explanations of the attached data, kept separate from the measured results above. Review before sharing.
-            </p>
-            <div className="analysis-ai-results">
-              {analysis.aiAnalysisResults.map((result) => (
-                <MiniChatPanel key={result.id} result={result} />
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </PageTemplate>
   )

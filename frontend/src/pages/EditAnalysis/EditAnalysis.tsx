@@ -1,20 +1,17 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { IoSparklesOutline } from 'react-icons/io5'
 import PageTemplate from '@/components/templates/PageTemplate'
 import LoadingSpinner from '@/components/common/feedback/LoadingSpinner'
 import { ButtonLoadingContent } from '@/components/common/feedback/ButtonSpinner'
-import MiniChatPanel from '@/components/analysis/MiniChatPanel'
-import { analysisAPI, FLEXIBILITY_EXERCISE_IDS, type AIAnalysisResult, type FlexibilityAssessmentResult, type FlexibilityExerciseId } from '@/services/api'
+import { analysisAPI, FLEXIBILITY_EXERCISE_IDS, type FlexibilityAssessmentResult, type FlexibilityExerciseId } from '@/services/api'
 import { useAnalysisStore } from '@/store/analysisStore'
-import { useAIAnalysisResults, useClinicalResultsForm, useFlexibilityAssessmentForm } from '@/hooks'
+import { useClinicalResultsForm, useFlexibilityAssessmentForm } from '@/hooks'
 import ClinicalResultsSection from '@/components/analysis/clinicalResults/ClinicalResultsSection'
 import AssessmentSportSelect from '@/components/analysis/AssessmentSportSelect'
 import type { ClinicalResults } from '@/types/clinicalResults.types'
 import { CLINICAL_SECTIONS, sectionHasData } from '@/utils/clinicalScoring'
 import { WeakPointsList } from '@/components/analysis/WeakPointsList'
 import { PhysicalCapacitiesForm } from '@/components/analysis/PhysicalCapacitiesForm'
-import { AnalysisFieldsForm } from '@/components/analysis/AnalysisFieldsForm'
 import FlexibilityAssessmentSection from '@/components/analysis/FlexibilityAssessmentSection'
 import DateInputMMDDYYYY from '@/components/common/forms/DateInputMMDDYYYY'
 import { localDateTimeToISO, toLocalDateTimeParts } from '@/utils/date.utils'
@@ -44,12 +41,6 @@ function EditAnalysis() {
     const [mensaje, setMensaje] = useState<{ tipo: 'success' | 'error'; texto: string } | null>(null)
     const [proximoIdPuntoDebil, setProximoIdPuntoDebil] = useState(1)
     const [athleteName, setAthleteName] = useState('')
-    const [aiAnalysisResults, setAiAnalysisResults] = useState<AIAnalysisResult[]>([])
-
-    const { results: aiResults, saveEdit: saveAiEdit } = useAIAnalysisResults(
-        id ? parseInt(id) : 0,
-        aiAnalysisResults
-    )
 
     // Flexibility Assessment: ratings are deferred to the main Save Changes
     // submit (like every other field on this page); evidence photo
@@ -69,12 +60,6 @@ function EditAnalysis() {
         // Local date ('YYYY-MM-DD') and time ('HH:mm') of the evaluation
         fechaEvaluacion: '',
         horaEvaluacion: '',
-        analisisFlexibilidad: '',
-        analisisBiobit: '',
-        asimetriaMuscular: '',
-        controlMotorActivo: '',
-        fatigaMuscular: '',
-        controlFuerzaInercia: '',
         puntosDebiles: [] as PuntoDebil[],
         capacidadesFisicas: {
             potencia: 0,
@@ -119,8 +104,6 @@ function EditAnalysis() {
             if (analysis.athlete?.name) {
                 setAthleteName(analysis.athlete.name)
             }
-
-            setAiAnalysisResults(analysis.aiAnalysisResults || [])
             setFlexibilityInitial(analysis.flexibilityAssessment || null)
             setClinicalInitial(analysis.clinicalResults || null)
             setAthleteGender(analysis.athlete?.gender ?? null)
@@ -129,12 +112,6 @@ function EditAnalysis() {
             setFormData({
                 fechaEvaluacion: evaluationParts.date,
                 horaEvaluacion: evaluationParts.time,
-                analisisFlexibilidad: analysis.flexibilityAnalysis || '',
-                analisisBiobit: analysis.biobitAnalysis || '',
-                asimetriaMuscular: analysis.muscularAsymmetry || '',
-                controlMotorActivo: analysis.activeMotorControl || '',
-                fatigaMuscular: analysis.functionalMuscleFatigue || '',
-                controlFuerzaInercia: analysis.inertiaForceControl || '',
                 puntosDebiles: parsedWeakPoints,
                 capacidadesFisicas: {
                     potencia: analysis.power || 0,
@@ -267,14 +244,6 @@ function EditAnalysis() {
             // null so the backend clears it (omitting it would keep the old value).
             const textOrNull = (value: string) => (value.trim() === '' ? null : value)
             const capacityOrNull = (value: number) => (value > 0 ? value : null) // 0 = slider not set
-
-            // Análisis textuales
-            updateData.flexibilityAnalysis = textOrNull(formData.analisisFlexibilidad)
-            updateData.biobitAnalysis = textOrNull(formData.analisisBiobit)
-            updateData.muscularAsymmetry = textOrNull(formData.asimetriaMuscular)
-            updateData.activeMotorControl = textOrNull(formData.controlMotorActivo)
-            updateData.functionalMuscleFatigue = textOrNull(formData.fatigaMuscular)
-            updateData.inertiaForceControl = textOrNull(formData.controlFuerzaInercia)
 
             // Puntos débiles - convertir array a JSON (removing them all clears the field)
             const puntosDebilesTexto = formData.puntosDebiles
@@ -424,43 +393,10 @@ function EditAnalysis() {
                     <ClinicalResultsSection form={clinicalForm} gender={athleteGender} disabled={saving} />
                 </div>
 
-                {/* SECCIÓN 4 - Análisis Textual */}
+                {/* SECCIÓN 4 - Conclusiones y Plan */}
                 <div className="form-section">
                     <h3 className="section-title">
                         <span className="section-number">4</span>
-                        Textual Analysis
-                    </h3>
-
-                    {/* Detailed Analysis */}
-                    <AnalysisFieldsForm
-                        formData={formData}
-                        onChange={handleChange}
-                    />
-
-                    {/* AI-Assisted Textual Analysis (view + inline edit only) */}
-                    {aiResults.length > 0 && (
-                        <div className="ai-results-subsection">
-                            <h4>
-                                <IoSparklesOutline /> AI-Assisted Analysis
-                            </h4>
-                            <div className="ai-results-list">
-                                {aiResults.map(result => (
-                                    <MiniChatPanel
-                                        key={result.id}
-                                        result={result}
-                                        editable
-                                        onSave={(newText) => saveAiEdit(result.id, newText)}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* SECCIÓN 5 - Conclusiones y Plan */}
-                <div className="form-section">
-                    <h3 className="section-title">
-                        <span className="section-number">5</span>
                         Conclusions and Plan
                     </h3>
 

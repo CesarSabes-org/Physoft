@@ -227,11 +227,6 @@
   border-bottom: 2px solid #14b8a6;
 }
 
-.report-doc .analysis-section-note {
-  margin: -0.4rem 0 0.8rem;
-  font-size: 0.75rem;
-}
-
 /* ---------- Cards on paper ---------- */
 .report-doc .chart-card,
 .report-doc .detailed-analysis-column,
@@ -373,29 +368,6 @@
 
 .report-doc .detailed-analysis-columns {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-/* ---------- AI text ---------- */
-.report-doc-ai-item {
-  padding: 0.85rem 1rem;
-  margin-bottom: 0.65rem;
-  border: 1px solid var(--report-line);
-  border-radius: 10px;
-  background: var(--report-surface);
-}
-
-.report-doc-ai-item h3 {
-  margin: 0 0 0.35rem;
-  font-size: 0.85rem;
-  color: var(--report-accent);
-}
-
-.report-doc-ai-item p {
-  margin: 0;
-  font-size: 0.82rem;
-  line-height: 1.55;
-  white-space: pre-wrap;
-  color: var(--color-text-secondary);
 }
 
 /* ---------- Footer ---------- */
@@ -595,7 +567,6 @@
   .capacity-card,
   .report-doc .chart-card,
   .report-doc .detailed-analysis-column,
-  .report-doc-ai-item,
   .report-doc .rom-table tr,
   .report-doc-footer {
     break-inside: avoid;

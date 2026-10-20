@@ -894,27 +894,7 @@
 }
 
 /* AI-Assisted Analysis subsection */
-.ai-results-subsection {
-  margin-top: 1.75rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--color-border, #404040);
-}
 
-.ai-results-subsection h4 {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.05rem;
-  color: var(--color-primary, #14b8a6);
-  margin-bottom: 1rem;
-}
-
-.ai-results-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 1rem;
-}
 /* Evaluation date + time (same layout as New Assessment) */
 .edit-analysis-page .eval-datetime-row {
   display: flex;
