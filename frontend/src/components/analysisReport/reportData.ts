@@ -28,6 +28,7 @@ import {
     hydrateClinicalResults,
     sectionHasData,
     sideDifference,
+    summarizeInertialForce,
     type CompensationRegion,
     type Finding,
     type FlexibilityScore
@@ -288,7 +289,8 @@ const PROGRESS_METRICS: ProgressMetric[] = [
     { label: 'Sway area, right support', unit: 'mm²', section: 'balance', read: (a) => a.clinicalResults?.balance?.rightAreaMm2 ?? null },
     { label: 'Sway area, left support', unit: 'mm²', section: 'balance', read: (a) => a.clinicalResults?.balance?.leftAreaMm2 ?? null },
     { label: 'Body fat', unit: '%', section: 'composition', read: (a) => a.clinicalResults?.composition?.bodyFatPct ?? null },
-    { label: 'BMI', unit: 'kg/m²', section: 'composition', read: (a) => a.clinicalResults?.composition?.bmi ?? null }
+    { label: 'BMI', unit: 'kg/m²', section: 'composition', read: (a) => a.clinicalResults?.composition?.bmi ?? null },
+    { label: 'Peak inertial force', unit: 'N', section: 'inertialForce', read: (a) => summarizeInertialForce(hydrateClinicalResults(a.clinicalResults).inertialForce).peak?.forceN ?? null }
 ]
 
 function sourceOf(analysis: Analysis, section: ClinicalSectionKey | 'flexibility'): string | null {

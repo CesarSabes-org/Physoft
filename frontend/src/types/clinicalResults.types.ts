@@ -108,6 +108,19 @@ export interface CompositionResults extends SectionBase {
 
 export type TensionShorteningResults = SectionBase
 
+/** One phase of the sport gesture: the device's force, or the IMU acceleration to compute F = m × a */
+export interface InertialForcePhase {
+    forceN: number | null
+    accelerationMs2: number | null
+}
+
+export interface InertialForceResults extends SectionBase {
+    /** Mass used for F = m × a (body, segment or implement — the evaluator states which in the notes) */
+    massKg: number | null
+    /** Always 4 phases; labels come from the assessment sport */
+    phases: InertialForcePhase[]
+}
+
 export interface PatientSnapshot {
     weightLbs: number | null
     heightFt: number | null
@@ -128,6 +141,7 @@ export interface ClinicalResults {
     asymmetry: AsymmetryResults
     fallRisk: FallRiskResults
     composition: CompositionResults
+    inertialForce: InertialForceResults
     tensionShortening: TensionShorteningResults
     /** Dotted field paths filled by AI extraction and not modified afterwards by the evaluator */
     aiExtractedFields: string[]

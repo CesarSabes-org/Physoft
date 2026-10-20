@@ -41,6 +41,15 @@ function mobilityFields(): ExtractionNumberField[] {
     })
 }
 
+/** Inertial force of the sport gesture, 4 phases in the order the report prints them */
+function inertialForceFields(): ExtractionNumberField[] {
+    const ordinals = ['FIRST', 'SECOND', 'THIRD', 'FOURTH']
+    return ordinals.flatMap((ordinal, index) => [
+        { path: `inertialForce.phases.${index}.forceN`, description: `Inertial force of the ${ordinal} phase of the sport gesture, in the order printed (e.g. golf: backswing, transition, impact, follow-through), newtons` },
+        { path: `inertialForce.phases.${index}.accelerationMs2`, description: `IMU acceleration of the ${ordinal} phase of the sport gesture, in the order printed, m/s²` }
+    ])
+}
+
 export const EXTRACTION_NUMBER_FIELDS: ExtractionNumberField[] = [
     { path: 'explosive.cmjHeightCm', description: 'Countermovement Jump (CMJ) jump height, centimeters' },
     { path: 'explosive.powerW', description: 'CMJ power, watts' },
@@ -61,7 +70,8 @@ export const EXTRACTION_NUMBER_FIELDS: ExtractionNumberField[] = [
     { path: 'composition.bodyFatPct', description: 'Percent body fat (PBF), %' },
     { path: 'composition.skeletalMuscleKg', description: 'Skeletal muscle mass (SMM), kg' },
     { path: 'composition.bmi', description: 'Body mass index (BMI), kg/m²' },
-    { path: 'composition.weightKg', description: 'Body weight, kg' }
+    { path: 'composition.weightKg', description: 'Body weight, kg' },
+    ...inertialForceFields()
 ]
 
 export const EXTRACTION_ENUM_FIELDS: { path: string; description: string; values: readonly string[] }[] = [
@@ -69,7 +79,7 @@ export const EXTRACTION_ENUM_FIELDS: { path: string; description: string; values
     { path: 'fallRisk.left', description: 'Fall risk category printed by the balance test for LEFT support', values: ['LOW', 'MEDIUM', 'HIGH'] }
 ]
 
-export const EXTRACTION_SOURCE_SECTIONS = ['explosive', 'balance', 'gait', 'mobility', 'asymmetry', 'fallRisk', 'composition'] as const
+export const EXTRACTION_SOURCE_SECTIONS = ['explosive', 'balance', 'gait', 'mobility', 'asymmetry', 'fallRisk', 'composition', 'inertialForce'] as const
 
 export const EXTRACTION_TOOL_NAME = 'record_extracted_values'
 
@@ -131,5 +141,6 @@ Strict rules:
 - Reference values: only record a reference when it is printed next to that specific measurement.
 - Fall risk: copy the category printed by the device; do not judge it yourself.
 - EMG: only list muscles that are explicitly reported; do not interpret fatigue or quality.
+- Inertial force: record the force (N) or the IMU acceleration (m/s²) printed for each phase of the sport gesture, in the order the report prints the phases. Never compute force from acceleration and never invent a phase that is not printed.
 - Read numbers carefully. Use the document's context to tell decimal from thousands separators (e.g. a sway area of "2,908 mm²" next to a bar labelled 2908 is 2908, while "0,7 m/s" is 0.7). If it stays ambiguous, omit the field and add a warning.
 - Always respond by calling the ${EXTRACTION_TOOL_NAME} tool.`

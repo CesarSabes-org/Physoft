@@ -1,25 +1,30 @@
 import { IoImageOutline } from 'react-icons/io5'
-import { DEFAULT_SPORT_PLACEHOLDER, INERTIAL_FORCE_PHASES, SPORT_IMAGES, SPORT_PLACEHOLDERS } from '../sportAssets'
-import ReportCard from './ReportCard'
+import type { ClinicalResults } from '@/types/clinicalResults.types'
+import { effectiveStatus, summarizeInertialForce } from '@/utils/clinicalScoring'
+import { DEFAULT_SPORT_PLACEHOLDER, SPORT_IMAGES, SPORT_PLACEHOLDERS, inertialPhaseLabels } from '../sportAssets'
+import ReportCard, { StatusTag } from './ReportCard'
 import './InertialForceCard.css'
 
-const METRICS = ['Peak Force', 'Average Force', 'Control Index', 'Variability']
-
 /**
- * Inertial Force for the assessment sport. Stays "Not evaluated" until
- * acquisition and a calculation method are available: a wrist IMU alone does
- * not give whole-body force, it has to be converted to newtons using the
- * measured velocity.
+ * Inertial Force of the sport gesture, by phase. Each phase shows the
+ * device's force, or F = m × a from the IMU acceleration and the mass the
+ * evaluator recorded. No classification until reference standards exist.
  */
-function InertialForceCard({ sport, index }: { sport: string | null; index?: number }) {
+function InertialForceCard({ results, sport, index }: { results: ClinicalResults; sport: string | null; index?: number }) {
+    const section = results.inertialForce
+    const status = effectiveStatus(results, 'inertialForce')
+    const evaluated = status !== 'NOT_EVALUATED'
+    const summary = summarizeInertialForce(section)
+    const labels = inertialPhaseLabels(sport)
     const image = sport ? SPORT_IMAGES[sport] : undefined
-    const phases = (sport && INERTIAL_FORCE_PHASES[sport]) || ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4']
+    const anyCalculated = summary.phases.some((p) => p.method === 'calculated')
 
     return (
         <ReportCard
             title={sport ? `Inertial Force — ${sport}` : 'Inertial Force'}
             index={index}
             subtitle="Force by movement phase"
+            source={evaluated ? section.source : null}
         >
             <div className="inertial-card-body">
                 <div className="inertial-card-visual">
@@ -34,27 +39,71 @@ function InertialForceCard({ sport, index }: { sport: string | null; index?: num
                 </div>
 
                 <div className="inertial-card-data">
-                    <span className="report-status-tag report-status-not_evaluated">Not evaluated</span>
+                    <StatusTag status={status} />
+
                     <div className="inertial-card-phases">
-                        {phases.map((phase) => (
-                            <div key={phase}>
-                                <span className="inertial-card-phase-bar" />
-                                <span>{phase}</span>
-                            </div>
-                        ))}
+                        {labels.map((label, i) => {
+                            const phase = summary.phases[i]
+                            const height = phase.forceN !== null && summary.peak ? Math.max(6, (phase.forceN / summary.peak.forceN) * 100) : 0
+                            return (
+                                <div key={label}>
+                                    <span className="inertial-card-phase-value">
+                                        {phase.forceN !== null ? `${phase.forceN}${phase.method === 'calculated' ? '*' : ''}` : '—'}
+                                    </span>
+                                    <span className={`inertial-card-phase-bar ${phase.forceN !== null ? 'has-value' : ''}`}>
+                                        {phase.forceN !== null && (
+                                            <span
+                                                className={summary.peak?.phaseIndex === i ? 'is-peak' : undefined}
+                                                style={{ height: `${height}%` }}
+                                            />
+                                        )}
+                                    </span>
+                                    <span>{label}</span>
+                                </div>
+                            )
+                        })}
                     </div>
+
                     <dl className="report-kv">
-                        {METRICS.map((metric) => (
-                            <div key={metric}>
-                                <dt>{metric}</dt>
-                                <dd className="inertial-card-empty">Not evaluated</dd>
-                            </div>
-                        ))}
+                        <div>
+                            <dt>Peak force</dt>
+                            <dd className={summary.peak ? undefined : 'inertial-card-empty'}>
+                                {summary.peak ? `${summary.peak.forceN} N` : 'Not evaluated'}
+                                {summary.peak && <small>{labels[summary.peak.phaseIndex]}</small>}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Average force</dt>
+                            <dd className={summary.averageN !== null ? undefined : 'inertial-card-empty'}>
+                                {summary.averageN !== null ? `${summary.averageN} N` : 'Not evaluated'}
+                                {summary.averageN !== null && <small>{summary.phasesWithForce} of 4 phases</small>}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt>Control Index</dt>
+                            <dd className="inertial-card-empty">Pending method</dd>
+                        </div>
+                        <div>
+                            <dt>Variability</dt>
+                            <dd className="inertial-card-empty">Pending method</dd>
+                        </div>
                     </dl>
-                    <p className="chart-card-note">
-                        Shown once inertial force acquisition and a validated calculation method are available. A wrist IMU
-                        alone does not provide whole-body force: it has to be converted to newtons using the measured velocity.
-                    </p>
+
+                    {evaluated ? (
+                        <>
+                            {anyCalculated && (
+                                <p className="chart-card-note">
+                                    * Calculated as F = m × a from the IMU acceleration and a mass of {section.massKg} kg. Other values are the device's force.
+                                </p>
+                            )}
+                            <p className="chart-card-note">Classification: <strong>Pending reference standards</strong>.</p>
+                            {section.notes && <p className="chart-card-note">{section.notes}</p>}
+                        </>
+                    ) : (
+                        <p className="chart-card-note">
+                            Not evaluated. Record the force of each phase from the device, or the IMU acceleration and the mass so it can be calculated as F = m × a.
+                        </p>
+                    )}
                 </div>
             </div>
         </ReportCard>

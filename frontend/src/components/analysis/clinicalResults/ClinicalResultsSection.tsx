@@ -26,8 +26,10 @@ import {
     classifyRange,
     classifyRom,
     sectionTitle,
-    sideDifference
+    sideDifference,
+    summarizeInertialForce
 } from '@/utils/clinicalScoring'
+import { inertialPhaseLabels } from '@/components/analysisReport/sportAssets'
 import { NumberField, ResultPreview, SelectField, TextField } from './ResultFields'
 import './ClinicalResultsSection.css'
 
@@ -196,6 +198,11 @@ function ClinicalResultsSection({ form, gender, disabled }: ClinicalResultsSecti
     const composition = results.composition
     const fatRef = bodyFatReference(gender)
     const balanceDiff = sideDifference(balance.rightAreaMm2, balance.leftAreaMm2)
+    const inertial = results.inertialForce
+    const inertialSummary = summarizeInertialForce(inertial)
+    const phaseLabels = inertialPhaseLabels(results.snapshot.sport)
+    // Body weight recorded at this evaluation, offered as the mass for F = m × a
+    const bodyMassKg = composition.weightKg ?? (results.snapshot.weightLbs !== null ? Math.round(results.snapshot.weightLbs * 0.453592 * 10) / 10 : null)
 
     return (
         <div className="clinical-results-section">
@@ -445,6 +452,58 @@ function ClinicalResultsSection({ form, gender, disabled }: ClinicalResultsSecti
                     </div>
                     <div>BMI: <strong>{composition.bmi === null ? 'Not evaluated' : `${classifyBmi(composition.bmi)} (WHO)`}</strong></div>
                     <div>Skeletal muscle: <strong>{composition.skeletalMuscleKg === null ? 'Not evaluated' : 'Reported without rating (no appropriate reference)'}</strong></div>
+                </ResultPreview>
+            </ResultBox>
+
+            {/* Inertial Force of the sport gesture (report card 9) */}
+            <ResultBox form={form} sectionKey="inertialForce" disabled={disabled}>
+                <p className="cr-help">
+                    For each phase of the {results.snapshot.sport ? `${results.snapshot.sport} ` : ''}gesture, enter the force reported by the device (N).
+                    If the device only gives the IMU acceleration, enter it (m/s²) together with the mass used, and the force is calculated as F = m × a.
+                    A force entered directly always takes precedence.
+                </p>
+                <div className="cr-grid">
+                    <NumberField form={form} path="inertialForce.massKg" label="Mass used for F = m × a" unit="kg" placeholder="Only for acceleration" disabled={disabled} />
+                </div>
+                {bodyMassKg !== null && inertial.massKg !== bodyMassKg && (
+                    <button type="button" className="cr-add-btn" disabled={disabled} onClick={() => form.setField('inertialForce.massKg', bodyMassKg)}>
+                        Use body weight ({bodyMassKg} kg)
+                    </button>
+                )}
+                <table className="cr-table">
+                    <thead>
+                        <tr><th>Phase</th><th>Force (N)</th><th>or IMU acceleration (m/s²)</th><th>Result</th></tr>
+                    </thead>
+                    <tbody>
+                        {phaseLabels.map((label, index) => {
+                            const phase = inertialSummary.phases[index]
+                            return (
+                                <tr key={label}>
+                                    <th scope="row">{label}</th>
+                                    <td><NumberField compact form={form} path={`inertialForce.phases.${index}.forceN`} ariaLabel={`${label} force (N)`} disabled={disabled} /></td>
+                                    <td><NumberField compact form={form} path={`inertialForce.phases.${index}.accelerationMs2`} ariaLabel={`${label} acceleration (m/s²)`} disabled={disabled} /></td>
+                                    <td>
+                                        {phase.forceN === null ? '—' : <strong>{phase.forceN} N</strong>}
+                                        {phase.method === 'calculated' && <small> · F = m × a</small>}
+                                    </td>
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                </table>
+                <ResultPreview>
+                    {inertialSummary.missingMass && <div>Enter the mass to convert the accelerations into force.</div>}
+                    <div>
+                        Peak: <strong>
+                            {inertialSummary.peak ? `${inertialSummary.peak.forceN} N (${phaseLabels[inertialSummary.peak.phaseIndex]})` : 'Not evaluated'}
+                        </strong>
+                    </div>
+                    <div>
+                        Average: <strong>
+                            {inertialSummary.averageN !== null ? `${inertialSummary.averageN} N (${inertialSummary.phasesWithForce} of 4 phases)` : 'Not evaluated'}
+                        </strong>
+                    </div>
+                    <div>Classification: <strong>Pending reference standards</strong></div>
                 </ResultPreview>
             </ResultBox>
 

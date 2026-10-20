@@ -30,7 +30,7 @@ function KeyGraphsSection({ data }: { data: ReportData }) {
                 <CompensationMapCard index={6} regions={data.regions} />
                 <RangeOfMotionCard index={7} results={results} />
                 <BodyCompositionCard index={8} results={results} gender={data.gender} />
-                <InertialForceCard index={9} sport={hasSportReport(sport) ? sport : null} />
+                <InertialForceCard index={9} results={results} sport={hasSportReport(sport) ? sport : null} />
             </div>
         </section>
     )

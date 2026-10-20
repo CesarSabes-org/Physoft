@@ -302,6 +302,7 @@ export const CLINICAL_SECTIONS: { key: ClinicalSectionKey; box: number | null; t
     { key: 'asymmetry', box: 7, title: 'Muscle Asymmetry', defaultSourceHint: 'e.g. Bilateral EMG during the task' },
     { key: 'fallRisk', box: 8, title: 'Fall Risk', defaultSourceHint: 'e.g. BTS Balance Test classification' },
     { key: 'composition', box: 9, title: 'Body Composition – InBody', defaultSourceHint: 'e.g. InBody570' },
+    { key: 'inertialForce', box: null, title: 'Inertial Force', defaultSourceHint: 'e.g. BTS G-Sensor — sport gesture' },
     { key: 'tensionShortening', box: null, title: 'Muscle Tension / Shortening', defaultSourceHint: 'Specific evaluation used' }
 ]
 
@@ -317,6 +318,63 @@ function emptyMobilityItem(definition: MobilityMovementDefinition): MobilityItem
         referenceDeg: definition.defaultReferenceDeg,
         functionalMinDeg: defaultFunctionalMin(definition.defaultReferenceDeg),
         excessiveLimitDeg: null
+    }
+}
+
+// --------------------------------------------
+// Inertial force (sport gesture, 4 phases)
+// --------------------------------------------
+
+export const INERTIAL_PHASE_COUNT = 4
+
+function emptyInertialPhases() {
+    return Array.from({ length: INERTIAL_PHASE_COUNT }, () => ({ forceN: null, accelerationMs2: null }))
+}
+
+export type InertialForceMethod = 'measured' | 'calculated'
+
+export interface InertialPhaseForce {
+    forceN: number | null
+    /** measured = the device's force; calculated = F = m × a from the IMU acceleration */
+    method: InertialForceMethod | null
+}
+
+/**
+ * Force of one phase: the device's value when recorded; otherwise
+ * F = m × a when both the mass and the IMU acceleration are known.
+ * No other formula is applied.
+ */
+export function inertialPhaseForce(phase: { forceN: number | null; accelerationMs2: number | null }, massKg: number | null): InertialPhaseForce {
+    if (phase.forceN !== null) return { forceN: phase.forceN, method: 'measured' }
+    if (massKg !== null && massKg > 0 && phase.accelerationMs2 !== null) {
+        return { forceN: Math.round(massKg * phase.accelerationMs2), method: 'calculated' }
+    }
+    return { forceN: null, method: null }
+}
+
+export interface InertialForceSummary {
+    phases: InertialPhaseForce[]
+    /** Highest phase force and its 0-based phase index */
+    peak: { forceN: number; phaseIndex: number } | null
+    /** Mean of the phases with a force; null when none */
+    averageN: number | null
+    phasesWithForce: number
+    /** Phases with an acceleration but no mass to convert it */
+    missingMass: boolean
+}
+
+export function summarizeInertialForce(section: { massKg: number | null; phases: { forceN: number | null; accelerationMs2: number | null }[] }): InertialForceSummary {
+    const phases = section.phases.map((p) => inertialPhaseForce(p, section.massKg))
+    const withForce = phases.map((p, i) => ({ ...p, i })).filter((p): p is InertialPhaseForce & { i: number; forceN: number } => p.forceN !== null)
+    const peak = withForce.reduce<{ forceN: number; phaseIndex: number } | null>(
+        (best, p) => (best === null || p.forceN > best.forceN ? { forceN: p.forceN, phaseIndex: p.i } : best), null
+    )
+    return {
+        phases,
+        peak,
+        averageN: withForce.length > 0 ? Math.round(withForce.reduce((sum, p) => sum + p.forceN, 0) / withForce.length) : null,
+        phasesWithForce: withForce.length,
+        missingMass: section.phases.some((p) => p.forceN === null && p.accelerationMs2 !== null) && !(section.massKg !== null && section.massKg > 0)
     }
 }
 
@@ -353,6 +411,7 @@ export function createEmptyClinicalResults(): ClinicalResults {
         asymmetry: { ...base, overall: null, muscles: [] },
         fallRisk: { ...base, right: null, left: null },
         composition: { ...base, bodyFatPct: null, skeletalMuscleKg: null, bmi: null, weightKg: null },
+        inertialForce: { ...base, massKg: null, phases: emptyInertialPhases() },
         tensionShortening: { ...base },
         aiExtractedFields: []
     }
@@ -382,6 +441,11 @@ export function hydrateClinicalResults(stored: ClinicalResults | null | undefine
         asymmetry: { ...empty.asymmetry, ...stored.asymmetry, muscles: stored.asymmetry?.muscles ?? [] },
         fallRisk: { ...empty.fallRisk, ...stored.fallRisk },
         composition: { ...empty.composition, ...stored.composition },
+        inertialForce: {
+            ...empty.inertialForce,
+            ...stored.inertialForce,
+            phases: empty.inertialForce.phases.map((phase, i) => ({ ...phase, ...(stored.inertialForce?.phases?.[i] ?? {}) }))
+        },
         tensionShortening: { ...empty.tensionShortening, ...stored.tensionShortening },
         aiExtractedFields: stored.aiExtractedFields ?? []
     }
@@ -412,6 +476,9 @@ export function sectionHasData(results: ClinicalResults, key: ClinicalSectionKey
             const s = results.composition
             return [s.bodyFatPct, s.skeletalMuscleKg, s.bmi, s.weightKg].some(isSet)
         }
+        case 'inertialForce':
+            // The mass alone is not a result: at least one phase must be recorded
+            return results.inertialForce.phases.some((p) => isSet(p.forceN) || isSet(p.accelerationMs2))
         case 'tensionShortening':
             return (results.tensionShortening.notes ?? '').trim() !== ''
     }

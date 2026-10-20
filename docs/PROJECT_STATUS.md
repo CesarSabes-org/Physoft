@@ -42,11 +42,11 @@ Actualizado: 2026-10-13 · rama `main`
 
 ## Decisiones clínicas (no cambiar sin el cliente)
 
-- **Sin "Textual Analysis" (retirado el 2026-10-20 a pedido del fisioterapeuta):** era redundante con las casillas medidas (Biobit/asimetría = EMG de la casilla 7; inertial force sigue "Not evaluated"). Se quitaron la sección de New/Edit Assessment, el anexo del reporte/PDF y `POST /api/claude/analyze-assessment`. Los textos ya guardados (`aiAnalysisResults` y los 6 campos de texto libre antiguos) siguen en la base, pero no se muestran.
+- **Sin "Textual Analysis" (retirado el 2026-10-20 a pedido del fisioterapeuta):** era redundante con las casillas medidas (Biobit/asimetría = EMG de la casilla 7; inertial force tiene su propia casilla de datos medidos). Se quitaron la sección de New/Edit Assessment, el anexo del reporte/PDF y `POST /api/claude/analyze-assessment`. Los textos ya guardados (`aiAnalysisResults` y los 6 campos de texto libre antiguos) siguen en la base, pero no se muestran.
 
 - Un valor ausente se muestra como **"Not evaluated"**, nunca como 0.
 - No hay puntaje global ni comparación de cohorte hasta que exista una fórmula justificada.
-- Inertial Force se muestra como "Not evaluated" hasta tener adquisición y un método de cálculo validado.
+- **Inertial Force (desde 2026-10-20):** se registra por fase del gesto deportivo (4 fases; nombres según el deporte, genéricos si el deporte no los define). Cada fase usa la fuerza que reporta el equipo (N) o, si solo hay aceleración del IMU, F = m × a con la masa que indica el evaluador. No se aplica otra fórmula ni hay clasificación hasta tener referencias; Control Index y Variability siguen "Pending method".
 - Asimetría muscular: solo predominancia aparente (amplitud EMG), sin calificar Good/Poor.
 - Fall Risk se copia de la clasificación del dispositivo; se refiere a caídas, no a riesgo de lesión general.
 
@@ -60,7 +60,7 @@ No inventarlos; mientras falten, el reporte muestra "Pending reference" o usa el
 - [ ] Límites de ROM excesivo.
 - [ ] Rango de grasa corporal para mujeres (provisional: 18–28 %).
 - [ ] Fórmula del puntaje global.
-- [ ] Método de cálculo de Inertial Force.
+- [ ] Inertial Force: qué masa usar en F = m × a (corporal, segmento o implemento), nombres de fase para los deportes además de golf, referencias para clasificar y definición de Control Index y Variability.
 
 ## Bugs conocidos
 

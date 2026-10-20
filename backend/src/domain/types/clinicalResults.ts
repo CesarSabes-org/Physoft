@@ -117,6 +117,21 @@ export interface CompositionResults extends SectionBase {
 
 export type TensionShorteningResults = SectionBase
 
+/** One phase of the sport gesture: the device's force, or the IMU acceleration for F = m × a */
+export interface InertialForcePhase {
+    forceN: number | null
+    accelerationMs2: number | null
+}
+
+export interface InertialForceResults extends SectionBase {
+    /** Mass used for F = m × a, kg */
+    massKg: number | null
+    /** Always INERTIAL_PHASE_COUNT phases, in gesture order */
+    phases: InertialForcePhase[]
+}
+
+export const INERTIAL_PHASE_COUNT = 4
+
 export interface PatientSnapshot {
     weightLbs: number | null
     heightFt: number | null
@@ -137,6 +152,7 @@ export interface ClinicalResults {
     asymmetry: AsymmetryResults
     fallRisk: FallRiskResults
     composition: CompositionResults
+    inertialForce: InertialForceResults
     tensionShortening: TensionShorteningResults
     /** Dotted field paths filled by AI extraction and not modified afterwards by the evaluator */
     aiExtractedFields: string[]
@@ -234,6 +250,21 @@ function normalizeMuscles(value: unknown): AsymmetryMuscle[] {
         .filter((m) => m.muscle !== '' || m.rightValue !== null || m.leftValue !== null || m.predominance !== null)
 }
 
+function normalizeInertialPhases(value: unknown): InertialForcePhase[] {
+    if (value !== null && value !== undefined && !Array.isArray(value)) {
+        throw new ClinicalResultsValidationError('inertialForce.phases must be an array')
+    }
+    const list = Array.isArray(value) ? value : []
+    // Always exactly INERTIAL_PHASE_COUNT phases: missing ones are empty, extra ones dropped
+    return Array.from({ length: INERTIAL_PHASE_COUNT }, (_, index) => {
+        const raw = asObject(list[index], `inertialForce.phases.${index}`)
+        return {
+            forceN: num(raw.forceN, `inertialForce.phases.${index}.forceN`),
+            accelerationMs2: num(raw.accelerationMs2, `inertialForce.phases.${index}.accelerationMs2`)
+        }
+    })
+}
+
 function normalizeAiFields(value: unknown): string[] {
     if (value === null || value === undefined) return []
     if (!Array.isArray(value)) {
@@ -270,6 +301,7 @@ export function normalizeClinicalResults(input: unknown): ClinicalResults {
     const asymmetry = asObject(root.asymmetry, 'asymmetry')
     const fallRisk = asObject(root.fallRisk, 'fallRisk')
     const composition = asObject(root.composition, 'composition')
+    const inertialForce = asObject(root.inertialForce, 'inertialForce')
     const tensionShortening = asObject(root.tensionShortening, 'tensionShortening')
 
     return {
@@ -333,6 +365,11 @@ export function normalizeClinicalResults(input: unknown): ClinicalResults {
             skeletalMuscleKg: num(composition.skeletalMuscleKg, 'composition.skeletalMuscleKg'),
             bmi: num(composition.bmi, 'composition.bmi'),
             weightKg: num(composition.weightKg, 'composition.weightKg')
+        },
+        inertialForce: {
+            ...sectionBase(inertialForce, 'inertialForce'),
+            massKg: num(inertialForce.massKg, 'inertialForce.massKg'),
+            phases: normalizeInertialPhases(inertialForce.phases)
         },
         tensionShortening: sectionBase(tensionShortening, 'tensionShortening'),
         aiExtractedFields: normalizeAiFields(root.aiExtractedFields)
