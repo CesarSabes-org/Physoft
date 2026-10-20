@@ -168,12 +168,6 @@ export class AnalysisController {
       const {
         athleteId,
         evaluationDate,
-        flexibilityAnalysis,
-        biobitAnalysis,
-        muscularAsymmetry,
-        activeMotorControl,
-        functionalMuscleFatigue,
-        inertiaForceControl,
         weakPoints, // JSON string array
         power,
         endurance,
@@ -183,7 +177,6 @@ export class AnalysisController {
         globalClassification,
         cohortClassification, // AI-generated cohort classification
         coachRecommendations,
-        aiAnalysisResults, // Textual Analysis AI results (array), JSON string over multipart
         flexibilityAssessment, // Flexibility Assessment ratings (array), JSON string over multipart
         clinicalResults // Measured/observed results for report boxes 2-9, JSON string over multipart
       } = req.body
@@ -275,15 +268,6 @@ export class AnalysisController {
         )
       }
 
-      // aiAnalysisResults is a native Json column: parse if it arrived as a
-      // JSON string (multipart form field), pass through if already an object/array.
-      let parsedAiAnalysisResults: any = undefined
-      if (aiAnalysisResults !== undefined && aiAnalysisResults !== null && aiAnalysisResults !== '') {
-        parsedAiAnalysisResults = typeof aiAnalysisResults === 'string'
-          ? JSON.parse(aiAnalysisResults)
-          : aiAnalysisResults
-      }
-
       // Flexibility Assessment: validate the submitted ratings, then upload
       // each exercise's evidence photo (if provided) under its own field
       // name so it maps back to the right exercise unambiguously.
@@ -316,12 +300,6 @@ export class AnalysisController {
           athleteId,
           evaluationDate: new Date(evaluationDate),
           graphImages: graphImagesArray.length > 0 ? JSON.stringify(graphImagesArray) : null,
-          flexibilityAnalysis: flexibilityAnalysis || null,
-          biobitAnalysis: biobitAnalysis || null,
-          muscularAsymmetry: muscularAsymmetry || null,
-          activeMotorControl: activeMotorControl || null,
-          functionalMuscleFatigue: functionalMuscleFatigue || null,
-          inertiaForceControl: inertiaForceControl || null,
           weakPoints: weakPoints || null,
           power: validateCapacity(power, 'Power'),
           endurance: validateCapacity(endurance, 'Endurance'),
@@ -331,7 +309,6 @@ export class AnalysisController {
           globalClassification: calculatedGlobalClassification,
           cohortClassification: cohortClassification || null, // From AI or manual input
           coachRecommendations: coachRecommendations || null,
-          aiAnalysisResults: parsedAiAnalysisResults,
           flexibilityAssessment: parsedFlexibilityAssessment ? toInputJson(parsedFlexibilityAssessment) : undefined,
           clinicalResults: parsedClinicalResults ? toInputJson(parsedClinicalResults) : undefined,
         },
@@ -370,12 +347,6 @@ export class AnalysisController {
       const { id } = req.params
       const {
         evaluationDate,
-        flexibilityAnalysis,
-        biobitAnalysis,
-        muscularAsymmetry,
-        activeMotorControl,
-        functionalMuscleFatigue,
-        inertiaForceControl,
         weakPoints,
         power,
         endurance,
@@ -385,7 +356,6 @@ export class AnalysisController {
         globalClassification,
         cohortClassification,
         coachRecommendations,
-        aiAnalysisResults,
         flexibilityAssessment,
         clinicalResults
       } = req.body
@@ -436,12 +406,6 @@ export class AnalysisController {
         where: { id: parseInt(id) },
         data: {
           ...(evaluationDate && { evaluationDate: new Date(evaluationDate) }),
-          ...(flexibilityAnalysis !== undefined && { flexibilityAnalysis }),
-          ...(biobitAnalysis !== undefined && { biobitAnalysis }),
-          ...(muscularAsymmetry !== undefined && { muscularAsymmetry }),
-          ...(activeMotorControl !== undefined && { activeMotorControl }),
-          ...(functionalMuscleFatigue !== undefined && { functionalMuscleFatigue }),
-          ...(inertiaForceControl !== undefined && { inertiaForceControl }),
           ...(weakPoints !== undefined && { weakPoints }),
           ...(power !== undefined && { power: validateCapacity(power, 'Power') }),
           ...(endurance !== undefined && { endurance: validateCapacity(endurance, 'Endurance') }),
@@ -451,17 +415,9 @@ export class AnalysisController {
           ...(globalClassification !== undefined && { globalClassification }),
           ...(cohortClassification !== undefined && { cohortClassification }),
           ...(coachRecommendations !== undefined && { coachRecommendations }),
-          // aiAnalysisResults is a native Json column: accept it directly when
-          // sent as a real array/object (plain JSON PUT body), or parse it if
-          // ever sent as a JSON string.
-          ...(aiAnalysisResults !== undefined && {
-            aiAnalysisResults: typeof aiAnalysisResults === 'string'
-              ? JSON.parse(aiAnalysisResults)
-              : aiAnalysisResults
-          }),
           // flexibilityAssessment is sent as the full array (ratings + the
           // evidenceUrl/evidencePublicId already known client-side), same
-          // full-replace contract as aiAnalysisResults. Evidence file
+          // full-replace contract. Evidence file
           // mutations themselves go through the dedicated endpoints below.
           ...(flexibilityAssessment !== undefined && {
             flexibilityAssessment: (() => {

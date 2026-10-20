@@ -80,7 +80,7 @@ app.use('/api/athletes', authenticate, athleteRoutes)
 // Analysis routes
 app.use('/api/analyses', authenticate, analysisRoutes)
 
-// Claude (AI Textual Analysis) routes
+// Claude (AI autocomplete of measured results) routes
 app.use('/api/claude', authenticate, claudeRoutes)
 
 // 404 route

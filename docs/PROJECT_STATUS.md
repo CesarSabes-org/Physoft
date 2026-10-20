@@ -19,7 +19,6 @@ Actualizado: 2026-10-13 · rama `main`
 - **Measured Results (casillas 2–9):** Explosive/CMJ, Fatigue, Balance, Gait, Mobility ROM, Muscle Asymmetry (EMG), Fall Risk e InBody.
 - Selector de deporte de la evaluación (define la ilustración del reporte) y lado dominante declarado.
 - **Autocompletado con IA** (`POST /api/claude/extract-clinical-results`): solo transcribe valores impresos en los PDF o imágenes adjuntos, nunca inventa. El evaluador los verifica.
-- **Análisis de texto con IA** por casilla (`POST /api/claude/analyze-assessment`), editable y guardado aparte de los resultados medidos.
 - Los resultados se guardan en `Analysis.clinicalResults` (JSONB) y se validan en `backend/src/domain/types/clinicalResults.ts`.
 
 ### Reporte de evaluación
@@ -31,7 +30,6 @@ Actualizado: 2026-10-13 · rama `main`
   3. **Capacity Profile — 7 tarjetas:** Mobility/Flexibility, Explosive Output, Fatigue/Resistance, Stability & Balance, Fall Risk, Muscular Symmetry (EMG), Body Composition. Solo Flexibility muestra un puntaje sobre 100, sin categoría (el cliente no definió cortes).
   4. **Key Graphs & Analysis — 9 tarjetas:** 1 Flexibilidad, 2 CMJ, 3 Fatiga, 4 Estabilidad (balance + fall risk + marcha), 5 EMG, 6 mapa de compensaciones, 7 ROM (con % de la referencia), 8 InBody, 9 Inertial Force del deporte.
   5. **Detailed Analysis:** limitaciones, tensión/acortamiento, recomendaciones del profesional y Progress Over Time (solo con visitas comparables, al menos 7 días de diferencia).
-  6. Anexo con el análisis de texto por IA.
 - **Exportación a PDF:** `/analysis-view/:id/report` muestra el documento A4 con la marca Physoft. **Download PDF** lo genera y lo descarga directamente (mismo resultado desde cualquier dispositivo); **Print** abre el diálogo de impresión.
 
 ### Asistente clínico (chatbot)
@@ -43,6 +41,8 @@ Actualizado: 2026-10-13 · rama `main`
 - Analytics, Reports y Protocols aparecen como "Coming Soon".
 
 ## Decisiones clínicas (no cambiar sin el cliente)
+
+- **Sin "Textual Analysis" (retirado el 2026-10-20 a pedido del fisioterapeuta):** era redundante con las casillas medidas (Biobit/asimetría = EMG de la casilla 7; inertial force sigue "Not evaluated"). Se quitaron la sección de New/Edit Assessment, el anexo del reporte/PDF y `POST /api/claude/analyze-assessment`. Los textos ya guardados (`aiAnalysisResults` y los 6 campos de texto libre antiguos) siguen en la base, pero no se muestran.
 
 - Un valor ausente se muestra como **"Not evaluated"**, nunca como 0.
 - No hay puntaje global ni comparación de cohorte hasta que exista una fórmula justificada.

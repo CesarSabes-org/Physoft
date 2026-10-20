@@ -1,7 +1,7 @@
 // ============================================
 // MIDDLEWARE: Claude Rate Limiter
 // ============================================
-// Blunts abuse/runaway-script traffic against POST /api/claude/analyze-assessment.
+// Blunts abuse/runaway-script traffic against POST /api/claude/extract-clinical-results.
 // Each request calls the paid Anthropic API, so an unbounded loop against
 // this endpoint burns through the API quota/budget, not just server CPU —
 // this exists to cut that off within seconds rather than after it happens.

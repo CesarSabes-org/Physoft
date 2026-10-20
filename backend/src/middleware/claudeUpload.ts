@@ -1,9 +1,9 @@
 // ============================================
 // UPLOAD MIDDLEWARE - Multer Configuration
 // ============================================
-// Handles file uploads for the Textual Analysis / Claude AI endpoint.
-// Separate from middleware/upload.ts (photos/graphs) since the allowed
-// types (PDF + images) and limits (10MB, 5 files) differ.
+// Device reports (PDF + images) for the AI autocomplete endpoint.
+// Separate from middleware/upload.ts (photos) since the allowed types and
+// limits (10MB, 5 files) differ.
 // ============================================
 
 import multer from 'multer'
@@ -24,7 +24,7 @@ const fileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterC
     }
 }
 
-export const uploadClaudeFiles = multer({
+const clinicalReportUpload = multer({
     storage,
     fileFilter,
     limits: {
@@ -39,7 +39,7 @@ export const uploadClaudeFiles = multer({
  * the app's generic 500 handler.
  */
 export function uploadClinicalReportFiles(req: Request, res: Response, next: NextFunction) {
-    uploadClaudeFiles.array('files', 5)(req, res, (err: unknown) => {
+    clinicalReportUpload.array('files', 5)(req, res, (err: unknown) => {
         if (!err) return next()
 
         if (err instanceof multer.MulterError) {

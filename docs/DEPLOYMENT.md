@@ -30,7 +30,7 @@ Secrets que necesita el repositorio en GitHub (Settings → Secrets → Actions)
 | `JWT_SECRET`, `JWT_EXPIRES_IN` | Firma y duración de la sesión |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Usuario admin que crea `seed:admin` |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Fotos e imágenes de evidencia |
-| `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Autocompletado y análisis de texto con IA |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Autocompletado con IA de los resultados medidos |
 | `CHAT_ANTHROPIC_MODEL` | Modelo del asistente clínico |
 
 ## Proyecto frontend (Vercel)

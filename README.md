@@ -2,7 +2,7 @@
 
 Plataforma web de evaluación clínica y deportiva de pacientes para fisioterapeutas y kinesiólogos:
 expedientes de pacientes, evaluaciones con resultados medidos, reporte clínico con reglas
-reproducibles, exportación a PDF, análisis de texto asistido por IA y un asistente clínico.
+reproducibles, exportación a PDF, autocompletado de resultados con IA y un asistente clínico.
 
 - **Producción:** dos proyectos en Vercel (frontend y backend) desplegados desde la rama `main`.
 - **Idioma:** la interfaz está en inglés; la documentación del equipo, en español.
@@ -14,7 +14,7 @@ reproducibles, exportación a PDF, análisis de texto asistido por IA y un asist
 | Frontend (`frontend/`) | React 18, TypeScript, Vite 6, React Router 6, Zustand, Recharts, Axios, jsPDF + html-to-image (PDF) |
 | Backend (`backend/`) | Node.js, Express 4, TypeScript, Prisma 5, JWT, Multer, Helmet |
 | Datos | PostgreSQL en Supabase · imágenes en Cloudinary |
-| IA | API de Anthropic (autocompletado de resultados, análisis de texto y asistente clínico) |
+| IA | API de Anthropic (autocompletado de resultados y asistente clínico) |
 | Despliegue | Vercel + GitHub Actions (`.github/workflows/deploy-vercel.yml`) |
 | Pruebas | Vitest y Playwright (frontend), `node --test` (backend) |
 
