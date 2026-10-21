@@ -154,6 +154,8 @@ export interface ClinicalResults {
     composition: CompositionResults
     inertialForce: InertialForceResults
     tensionShortening: TensionShorteningResults
+    /** Evaluator's free-text clinical notes / detected conditions */
+    clinicalNotes: string | null
     /** Dotted field paths filled by AI extraction and not modified afterwards by the evaluator */
     aiExtractedFields: string[]
 }
@@ -372,6 +374,7 @@ export function normalizeClinicalResults(input: unknown): ClinicalResults {
             phases: normalizeInertialPhases(inertialForce.phases)
         },
         tensionShortening: sectionBase(tensionShortening, 'tensionShortening'),
+        clinicalNotes: text(root.clinicalNotes, 'clinicalNotes', MAX_TEXT_LENGTH),
         aiExtractedFields: normalizeAiFields(root.aiExtractedFields)
     }
 }

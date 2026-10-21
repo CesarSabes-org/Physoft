@@ -143,11 +143,13 @@ export interface ClinicalResults {
     composition: CompositionResults
     inertialForce: InertialForceResults
     tensionShortening: TensionShorteningResults
+    /** Evaluator's free-text clinical notes / detected conditions (not used by any rule) */
+    clinicalNotes: string | null
     /** Dotted field paths filled by AI extraction and not modified afterwards by the evaluator */
     aiExtractedFields: string[]
 }
 
-export type ClinicalSectionKey = Exclude<keyof ClinicalResults, 'version' | 'snapshot' | 'aiExtractedFields'>
+export type ClinicalSectionKey = Exclude<keyof ClinicalResults, 'version' | 'snapshot' | 'clinicalNotes' | 'aiExtractedFields'>
 
 /** Response of POST /claude/extract-clinical-results */
 export interface ClinicalExtractionResult {

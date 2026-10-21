@@ -25,7 +25,7 @@ function setIn<T>(obj: T, path: Path, value: unknown): T {
 
 function sectionOf(path: Path): ClinicalSectionKey | null {
     const head = path.split('.')[0]
-    return head === 'snapshot' || head === 'aiExtractedFields' || head === 'version' ? null : (head as ClinicalSectionKey)
+    return head === 'snapshot' || head === 'clinicalNotes' || head === 'aiExtractedFields' || head === 'version' ? null : (head as ClinicalSectionKey)
 }
 
 function isEmptyValue(value: unknown): boolean {

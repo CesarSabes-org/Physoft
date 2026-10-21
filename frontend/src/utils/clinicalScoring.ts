@@ -413,6 +413,7 @@ export function createEmptyClinicalResults(): ClinicalResults {
         composition: { ...base, bodyFatPct: null, skeletalMuscleKg: null, bmi: null, weightKg: null },
         inertialForce: { ...base, massKg: null, phases: emptyInertialPhases() },
         tensionShortening: { ...base },
+        clinicalNotes: null,
         aiExtractedFields: []
     }
 }
@@ -447,6 +448,7 @@ export function hydrateClinicalResults(stored: ClinicalResults | null | undefine
             phases: empty.inertialForce.phases.map((phase, i) => ({ ...phase, ...(stored.inertialForce?.phases?.[i] ?? {}) }))
         },
         tensionShortening: { ...empty.tensionShortening, ...stored.tensionShortening },
+        clinicalNotes: stored.clinicalNotes ?? null,
         aiExtractedFields: stored.aiExtractedFields ?? []
     }
 }

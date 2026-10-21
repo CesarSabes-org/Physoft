@@ -8,6 +8,7 @@ import { useAnalysisStore } from '@/store/analysisStore'
 import { useClinicalResultsForm, useFlexibilityAssessmentForm } from '@/hooks'
 import ClinicalResultsSection from '@/components/analysis/clinicalResults/ClinicalResultsSection'
 import AssessmentSportSelect from '@/components/analysis/AssessmentSportSelect'
+import ClinicalNotesField from '@/components/analysis/ClinicalNotesField'
 import type { ClinicalResults } from '@/types/clinicalResults.types'
 import { CLINICAL_SECTIONS, sectionHasData } from '@/utils/clinicalScoring'
 import { WeakPointsList } from '@/components/analysis/WeakPointsList'
@@ -279,7 +280,7 @@ function EditAnalysis() {
             // Measured results: full replace. Older assessments without results
             // only get the column written once something is actually entered.
             const hasClinicalData = CLINICAL_SECTIONS.some(({ key }) => sectionHasData(clinicalForm.results, key))
-            if (clinicalInitial || hasClinicalData || clinicalForm.results.snapshot.sport) {
+            if (clinicalInitial || hasClinicalData || clinicalForm.results.snapshot.sport || clinicalForm.results.clinicalNotes) {
                 updateData.clinicalResults = clinicalForm.results
             }
 
@@ -358,6 +359,8 @@ function EditAnalysis() {
                         onChange={(sport) => clinicalForm.setField('snapshot.sport', sport || null)}
                         disabled={saving}
                     />
+
+                    <ClinicalNotesField form={clinicalForm} disabled={saving} />
                 </div>
 
                 {/* SECTION 2 - Flexibility Assessment */}

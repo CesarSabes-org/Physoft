@@ -1,4 +1,4 @@
-import { IoCalendarOutline, IoCheckmarkDoneOutline, IoDocumentTextOutline, IoTrophyOutline } from 'react-icons/io5'
+import { IoAlertCircleOutline, IoCalendarOutline, IoCheckmarkDoneOutline, IoDocumentTextOutline, IoTrophyOutline } from 'react-icons/io5'
 import { calculateAge, formatBirthDateMMDDYYYY } from '@/utils/date.utils'
 import { translateBodyType } from '@/utils/translation.utils'
 import { DOMINANT_SIDE_LABELS, evaluationCoverage, resolvePatientSnapshot, type ReportData } from './reportData'
@@ -31,6 +31,10 @@ function ReportPatientCard({ data }: { data: ReportData }) {
     const age = athlete?.birthDate ? calculateAge(athlete.birthDate) : null
     const profileMark = patient.fromProfile ? ' *' : ''
     const name = athlete?.name ?? 'Patient'
+    const clinicalNotes = (data.results.clinicalNotes ?? '')
+        .split(/\r?\n/)
+        .map((line) => line.replace(/^\s*[-•*]\s*/, '').trim())
+        .filter(Boolean)
 
     const identity = [
         athlete?.accessCode ? `Code ${athlete.accessCode}` : null,
@@ -73,6 +77,15 @@ function ReportPatientCard({ data }: { data: ReportData }) {
                 </dl>
                 {patient.fromProfile && (
                     <p className="report-patient-footnote">* Not recorded at this evaluation — taken from the current patient profile.</p>
+                )}
+
+                {clinicalNotes.length > 0 && (
+                    <div className="report-patient-notes">
+                        <h3><IoAlertCircleOutline aria-hidden="true" /> Clinical notes &amp; detected conditions</h3>
+                        <ul>
+                            {clinicalNotes.map((note, i) => <li key={i}>{note}</li>)}
+                        </ul>
+                    </div>
                 )}
             </div>
 

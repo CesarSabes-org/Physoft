@@ -9,6 +9,7 @@ import { useAthleteStore } from '@/store/athleteStore'
 import DateInputMMDDYYYY from '@/components/common/forms/DateInputMMDDYYYY'
 import FlexibilityAssessmentSection from '@/components/analysis/FlexibilityAssessmentSection'
 import ClinicalResultsSection from '@/components/analysis/clinicalResults/ClinicalResultsSection'
+import ClinicalNotesField from '@/components/analysis/ClinicalNotesField'
 import AssessmentSportSelect from '@/components/analysis/AssessmentSportSelect'
 import { defaultAssessmentSport } from '@/components/analysisReport/sportAssets'
 import { useClinicalResultsForm, useFlexibilityAssessmentForm } from '@/hooks'
@@ -387,6 +388,8 @@ function NewAnalysis() {
                 disabled={guardando}
               />
             </div>
+
+            <ClinicalNotesField form={clinicalForm} disabled={guardando} />
           </div>
 
           {/* SECTION 2 - Flexibility Assessment */}
