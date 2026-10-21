@@ -18,9 +18,17 @@ interface PdfFile {
     filename: string
 }
 
+interface SpreadsheetFile {
+    filename: string
+    /** Tab-separated text, one "### Sheet: name" block per sheet */
+    text: string
+    truncated: boolean
+}
+
 interface ExtractClinicalResultsInput {
     imageFiles: ImageFile[]
     pdfFiles: PdfFile[]
+    spreadsheets?: SpreadsheetFile[]
 }
 
 export interface ExtractedMuscle {
@@ -129,6 +137,12 @@ class ClaudeAnalysisService {
      */
     async extractClinicalResults(input: ExtractClinicalResultsInput): Promise<ExtractClinicalResultsResult> {
         const content = this.buildFileBlocks(input.pdfFiles, input.imageFiles)
+        for (const sheet of input.spreadsheets ?? []) {
+            content.push({
+                type: 'text',
+                text: `Spreadsheet "${sheet.filename}" (converted to tab-separated text${sheet.truncated ? '; large file, only the first rows/columns are included' : ''}):\n\n${sheet.text}`
+            })
+        }
         content.push({
             type: 'text',
             text: 'Transcribe the values explicitly printed in the attached report(s). Omit every field that is not printed.'

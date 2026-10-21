@@ -151,7 +151,7 @@ function AiAutofillPanel({ form, disabled }: { form: UseClinicalResultsFormRetur
             <div className="cr-ai-panel-text">
                 <h4><IoSparkles /> Auto-fill from device reports</h4>
                 <p>
-                    Upload the BTS, InBody or EMG reports (PDF or images). The AI only transcribes values that are explicitly
+                    Upload the BTS, InBody or EMG reports (PDF, images or Excel exports). The AI only transcribes values that are explicitly
                     printed — it never estimates or classifies. Suggested values are marked <strong>AI</strong> and their boxes
                     are set to <em>Pending verification</em> until you review them.
                 </p>

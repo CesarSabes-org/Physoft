@@ -1,7 +1,7 @@
 // ============================================
 // UPLOAD MIDDLEWARE - Multer Configuration
 // ============================================
-// Device reports (PDF + images) for the AI autocomplete endpoint.
+// Device reports (PDF, images, Excel .xlsx / .csv) for the AI autocomplete endpoint.
 // Separate from middleware/upload.ts (photos) since the allowed types and
 // limits (10MB, 5 files) differ.
 // ============================================
@@ -13,14 +13,20 @@ import { Request, Response, NextFunction } from 'express'
 const storage = multer.memoryStorage()
 
 const fileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-    const allowedTypes = /pdf|jpeg|jpg|png|webp|gif/
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
-    const mimetype = allowedTypes.test(file.mimetype)
+    const extension = path.extname(file.originalname).toLowerCase()
 
-    if (mimetype && extname) {
+    // Spreadsheets: browsers report varied MIME types for .csv, so the extension
+    // decides; the content is validated when it is converted to text.
+    if (extension === '.xlsx' || extension === '.csv') return cb(null, true)
+    if (extension === '.xls') {
+        return cb(new Error(`"${file.originalname}" uses the old .xls format. Save it as .xlsx and try again.`))
+    }
+
+    const allowedTypes = /pdf|jpeg|jpg|png|webp|gif/
+    if (allowedTypes.test(extension) && allowedTypes.test(file.mimetype)) {
         cb(null, true)
     } else {
-        cb(new Error('Only PDF and images are allowed (pdf, jpeg, jpg, png, webp, gif)'))
+        cb(new Error('Only PDF, images (jpeg, jpg, png, webp, gif) and Excel files (.xlsx, .csv) are allowed'))
     }
 }
 

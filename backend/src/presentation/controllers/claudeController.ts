@@ -7,6 +7,7 @@
 // ============================================
 
 import { Request, Response } from 'express'
+import { isSpreadsheetFilename, spreadsheetToText, SpreadsheetReadError, type SpreadsheetText } from '../../infrastructure/spreadsheets/spreadsheetToText'
 
 // Claude's Messages API caps requests at 32MB. Base64 inflates raw bytes by
 // ~4/3, so we reject uploads that would exceed that before ever calling the
@@ -23,7 +24,7 @@ export class ClaudeController {
       const files = (req.files as Express.Multer.File[]) || []
 
       if (files.length === 0) {
-        return res.status(400).json({ success: false, error: 'Attach at least one report (PDF or image)' })
+        return res.status(400).json({ success: false, error: 'Attach at least one report (PDF, image or Excel)' })
       }
 
       const emptyFile = files.find(f => f.size === 0)
@@ -44,8 +45,21 @@ export class ClaudeController {
         .filter(f => imageMimeTypes.has(f.mimetype))
         .map(f => ({ buffer: f.buffer, mimeType: f.mimetype === 'image/jpg' ? 'image/jpeg' : f.mimetype }))
       const pdfFiles = files
-        .filter(f => f.mimetype === 'application/pdf')
+        .filter(f => f.mimetype === 'application/pdf' && !isSpreadsheetFilename(f.originalname))
         .map(f => ({ buffer: f.buffer, filename: f.originalname }))
+
+      // Excel / CSV exports are converted to text: the AI can't read them directly
+      const spreadsheets: SpreadsheetText[] = []
+      for (const file of files.filter(f => isSpreadsheetFilename(f.originalname))) {
+        try {
+          spreadsheets.push(await spreadsheetToText(file.buffer, file.originalname))
+        } catch (error) {
+          if (error instanceof SpreadsheetReadError) {
+            return res.status(400).json({ success: false, error: `"${file.originalname}" ${error.message}` })
+          }
+          throw error
+        }
+      }
 
       let claudeAnalysisService: typeof import('../../application/services/claudeAnalysisService').default
       try {
@@ -57,7 +71,7 @@ export class ClaudeController {
         })
       }
 
-      const result = await claudeAnalysisService.extractClinicalResults({ imageFiles, pdfFiles })
+      const result = await claudeAnalysisService.extractClinicalResults({ imageFiles, pdfFiles, spreadsheets })
 
       return res.json({
         success: true,

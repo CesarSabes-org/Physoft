@@ -1,9 +1,17 @@
 import { useRef, useState } from 'react'
-import { IoCloudUploadOutline, IoDocumentTextOutline, IoImageOutline, IoClose } from 'react-icons/io5'
+import { IoCloudUploadOutline, IoDocumentTextOutline, IoImageOutline, IoGridOutline, IoClose } from 'react-icons/io5'
 import './AnalysisFileUpload.css'
 
 const ACCEPTED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
-const ACCEPTED_EXTENSIONS = '.pdf,.jpg,.jpeg,.png,.webp,.gif'
+// Excel exports: checked by extension (browsers report varied MIME types for .csv).
+// The backend converts them to text so the AI can read them.
+const SPREADSHEET_EXTENSIONS = ['.xlsx', '.csv']
+const ACCEPTED_EXTENSIONS = '.pdf,.jpg,.jpeg,.png,.webp,.gif,.xlsx,.csv'
+
+function isSpreadsheet(file: File): boolean {
+    const name = file.name.toLowerCase()
+    return SPREADSHEET_EXTENSIONS.some((ext) => name.endsWith(ext))
+}
 const MAX_FILE_SIZE_MB = 10
 const MAX_FILES = 5
 
@@ -29,8 +37,12 @@ function AnalysisFileUpload({ files, onChange, disabled = false }: AnalysisFileU
         const incomingArray = Array.from(incoming)
 
         for (const file of incomingArray) {
-            if (!ACCEPTED_MIME_TYPES.includes(file.type)) {
-                setError(`"${file.name}" is not a supported type. Only PDF and images (JPG, PNG, WEBP, GIF) are allowed.`)
+            if (file.name.toLowerCase().endsWith('.xls')) {
+                setError(`"${file.name}" uses the old .xls format. Save it as .xlsx and try again.`)
+                return
+            }
+            if (!isSpreadsheet(file) && !ACCEPTED_MIME_TYPES.includes(file.type)) {
+                setError(`"${file.name}" is not a supported type. Use PDF, images (JPG, PNG, WEBP, GIF) or Excel (.xlsx, .csv).`)
                 return
             }
             if (file.size === 0) {
@@ -92,7 +104,7 @@ function AnalysisFileUpload({ files, onChange, disabled = false }: AnalysisFileU
                 />
                 <IoCloudUploadOutline />
                 <span>Drag files here or click to select</span>
-                <p>PDF or images &middot; max {MAX_FILE_SIZE_MB}MB each &middot; up to {MAX_FILES} files</p>
+                <p>PDF, images or Excel (.xlsx, .csv) &middot; max {MAX_FILE_SIZE_MB}MB each &middot; up to {MAX_FILES} files</p>
             </div>
 
             {error && <p className="analysis-file-error">{error}</p>}
@@ -101,7 +113,7 @@ function AnalysisFileUpload({ files, onChange, disabled = false }: AnalysisFileU
                 <ul className="analysis-file-list">
                     {files.map((file, index) => (
                         <li key={`${file.name}-${index}`} className="analysis-file-chip">
-                            {file.type === 'application/pdf' ? <IoDocumentTextOutline /> : <IoImageOutline />}
+                            {isSpreadsheet(file) ? <IoGridOutline /> : file.type === 'application/pdf' ? <IoDocumentTextOutline /> : <IoImageOutline />}
                             <span className="analysis-file-chip-name">{file.name}</span>
                             <span className="analysis-file-chip-size">{formatFileSize(file.size)}</span>
                             {!disabled && (

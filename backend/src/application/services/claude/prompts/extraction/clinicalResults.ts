@@ -142,5 +142,6 @@ Strict rules:
 - Fall risk: copy the category printed by the device; do not judge it yourself.
 - EMG: only list muscles that are explicitly reported; do not interpret fatigue or quality.
 - Inertial force: record the force (N) or the IMU acceleration (m/s²) printed for each phase of the sport gesture, in the order the report prints the phases. Never compute force from acceleration and never invent a phase that is not printed.
+- Spreadsheets (Excel/CSV exports) arrive converted to tab-separated text, one block per sheet. Use the column headers and row labels to identify each value and its unit; apply the same rules as for printed reports.
 - Read numbers carefully. Use the document's context to tell decimal from thousands separators (e.g. a sway area of "2,908 mm²" next to a bar labelled 2908 is 2908, while "0,7 m/s" is 0.7). If it stays ambiguous, omit the field and add a warning.
 - Always respond by calling the ${EXTRACTION_TOOL_NAME} tool.`

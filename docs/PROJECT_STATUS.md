@@ -18,7 +18,8 @@ Actualizado: 2026-10-13 · rama `main`
 - **Flexibilidad (casilla 1):** 4 pruebas estandarizadas. Puntos: Poor 25 · Average 60 · Excellent 100 · Risk 100 con advertencia aparte. Flexibility Score = promedio de las 4.
 - **Measured Results (casillas 2–9):** Explosive/CMJ, Fatigue, Balance, Gait, Mobility ROM, Muscle Asymmetry (EMG), Fall Risk e InBody.
 - Selector de deporte de la evaluación (define la ilustración del reporte) y lado dominante declarado.
-- **Autocompletado con IA** (`POST /api/claude/extract-clinical-results`): solo transcribe valores impresos en los PDF o imágenes adjuntos, nunca inventa. El evaluador los verifica.
+- **Autocompletado con IA** (`POST /api/claude/extract-clinical-results`): solo transcribe valores impresos en los PDF, imágenes o exportaciones de Excel (`.xlsx`, `.csv`) adjuntos, nunca inventa. El evaluador los verifica. Los Excel se convierten a texto en el backend (`exceljs`; máx. 500 filas y 60 columnas por hoja); el formato antiguo `.xls` no se admite.
+- **Notas clínicas y condiciones detectadas** (sección 1 de New/Edit Assessment): texto libre guardado en `clinicalResults.clinicalNotes` y mostrado en el encabezado del reporte. No interviene en ninguna regla.
 - Los resultados se guardan en `Analysis.clinicalResults` (JSONB) y se validan en `backend/src/domain/types/clinicalResults.ts`.
 
 ### Reporte de evaluación
@@ -74,7 +75,7 @@ No inventarlos; mientras falten, el reporte muestra "Pending reference" o usa el
 
 ## Riesgos y deuda técnica
 
-- **Límite de subida de Vercel (~4.5 MB):** PDFs grandes pueden fallar en el autocompletado con IA.
+- **Límite de subida de Vercel (~4.5 MB por petición):** PDFs o Excel grandes pueden fallar en el autocompletado con IA.
 - **Lint general del frontend sin configuración:** solo el módulo del chatbot tiene `lint:chat`; `npm run lint` no funciona hasta definir un `.eslintrc`.
 - **Fotos locales heredadas en `backend/public/uploads/athletes/`** (37 archivos versionados en el repo público, servidos en `/uploads`). Todas las subidas nuevas van a Cloudinary. Antes de borrarlas, confirmar en la base que ningún paciente tenga una foto con ruta `/uploads/...`.
 - **`backend/src/presentation/controllers/chatController.ts`** no lo usan la app ni las pruebas (lo reemplazó `conversationController`). Pendiente de que Daniel confirme y lo retire.
