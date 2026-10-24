@@ -76,54 +76,6 @@ function Profile() {
                         </div>
                     </div>
                 </div>
-
-                {/* Statistics Section */}
-                <div className="profile-section">
-                    <div className="profile-section-header">
-                        <IoShield className="section-icon" />
-                        <h3>Usage Statistics</h3>
-                    </div>
-                    <div className="profile-stats">
-                        <div className="stat-card">
-                            <p className="stat-value">Unlimited</p>
-                            <p className="stat-label">Registered Patients</p>
-                        </div>
-                        <div className="stat-card">
-                            <p className="stat-value">Unlimited</p>
-                            <p className="stat-label">Assessments Completed</p>
-                        </div>
-                        <div className="stat-card">
-                            <p className="stat-value">Premium</p>
-                            <p className="stat-label">Current Plan</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Permissions Section */}
-                <div className="profile-section">
-                    <div className="profile-section-header">
-                        <IoShield className="section-icon" />
-                        <h3>Permissions</h3>
-                    </div>
-                    <div className="profile-permissions">
-                        <div className="permission-item">
-                            <IoShield className="permission-icon" />
-                            <span>Full system access</span>
-                        </div>
-                        <div className="permission-item">
-                            <IoShield className="permission-icon" />
-                            <span>Patient management</span>
-                        </div>
-                        <div className="permission-item">
-                            <IoShield className="permission-icon" />
-                            <span>Create and edit assessments</span>
-                        </div>
-                        <div className="permission-item">
-                            <IoShield className="permission-icon" />
-                            <span>AI-powered analysis</span>
-                        </div>
-                    </div>
-                </div>
             </div>
         </PageTemplate>
     )
