@@ -79,3 +79,6 @@ No inventarlos; mientras falten, el reporte muestra "Pending reference" o usa el
 - **Lint general del frontend sin configuración:** solo el módulo del chatbot tiene `lint:chat`; `npm run lint` no funciona hasta definir un `.eslintrc`.
 - **Fotos locales heredadas en `backend/public/uploads/athletes/`** (37 archivos versionados en el repo público, servidos en `/uploads`). Todas las subidas nuevas van a Cloudinary. Antes de borrarlas, confirmar en la base que ningún paciente tenga una foto con ruta `/uploads/...`.
 - **`backend/src/presentation/controllers/chatController.ts`** no lo usan la app ni las pruebas (lo reemplazó `conversationController`). Pendiente de que Daniel confirme y lo retire.
+
+
+-De momento solo hay un rol
